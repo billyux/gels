@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>고령자 AI 케어 - 통합 대시보드</title>
+<style>
+    /* ----------------------------------
+       디자인 테마 변수 설정 (이미지 기준)
+    ---------------------------------- */
+    :root {
+        --bg-color: #f4f1ea;         /* 배경색 (화이트 세이지) */
+        --card-bg: #ffffff;         /* 카드 배경 (순백색) */
+        --text-main: #333333;       /* 메인 텍스트 */
+        --text-sub: #777777;        /* 보조 텍스트 */
+        --primary-color: #90a97a;   /* 연두색 (메인 포인트) */
+        --accent-color: #c89c87;    /* 살구색 (서브 포인트) */
+        --border-color: #e0e0e0;    /* 테두리 색상 */
+        --font-family: 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+    }
+
+    body {
+        font-family: var(--font-family);
+        margin: 0;
+        background: var(--bg-color);
+        color: var(--text-main);
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* ----------------------------------
+       레이아웃 (왼쪽 메뉴 + 메인 콘텐츠)
+    ---------------------------------- */
+    /* 왼쪽 메뉴바 스타일 (기존 디자인 참고) */
+    .sidebar {
+        width: 250px;
+        background: var(--card-bg);
+        border-right: 1px solid var(--border-color);
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+    }
+
+    .logo {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--primary-color);
+        margin-bottom: 40px;
+    }
+
+    .profile-short {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .avatar {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        background: #ddd;
+    }
+
+    .menu-list a {
+        display: block;
+        padding: 12px 15px;
+        color: var(--text-sub);
+        text-decoration: none;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+
+    .menu-list a:hover, .menu-list a.active {
+        background: #f0f8e8;
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+
+    /* 메인 랩퍼 */
+    .main-content {
+        flex: 1;
+        padding: 30px;
+    }
+
+    /* 헤더 영역 */
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .top-profile {
+        display: flex; align-items: center; gap: 15px;
+    }
+    .top-profile span { font-size: 14px; }
+    .app-check-btn {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    /* ----------------------------------
+       카드 디자인 (전면 수정)
+    ---------------------------------- */
+    .grid-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: var(--card-bg);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* 부드러운 그림자 */
+    }
+
+    .card h2 {
+        font-size: 18px;
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: var(--text-main);
+    }
+
+    /* ----------------------------------
+       개별 컴포넌트 스타일
+    ---------------------------------- */
+    /* 출석 달력 스타일 */
+    .calendar-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 5px;
+        text-align: center;
+    }
+
+    .calendar-table th {
+        font-size: 12px; color: var(--text-sub); font-weight: normal;
+        padding-bottom: 10px;
+    }
+
+    .calendar-table td {
+        width: 35px; height: 35px;
+        border-radius: 50%;
+        font-size: 14px;
+        position: relative;
+    }
+
+    /* 체크된 날짜 스타일 (이미지 기준) */
+    .calendar-table td.checked {
+        background: #e9f5e1; /* 연한 연두색 배경 */
+        color: var(--primary-color);
+        font-weight: bold;
+    }
+
+    .calendar-table td.checked::after {
+        content: '✔';
+        position: absolute;
+        font-size: 10px;
+        top: 2px; right: 2px;
+        color: var(--primary-color);
+    }
+
+    .calendar-table td.today {
+        border: 2px solid var(--primary-color);
+    }
+
+    /* 버튼 스타일 수정 */
+    .btn-custom {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: 0.2s;
+    }
+
+    .btn-custom:hover { background: #7f966b; }
+
+    .btn-danger {
+        background: #ff7676;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-bottom: 10px;
+    }
+
+    /* 입력창 스타일 수정 */
+    textarea, input {
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: #fafafa;
+        font-family: var(--font-family);
+    }
+
+    textarea:focus, input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+    }
+
+    /* 채팅 UI 스타일 (말풍선 개선) */
+   .chat{
+    height:200px;
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    display:flex;
+    flex-direction:column;
+
+    background:#f5f7fb;
+    border-radius:15px;
+    padding:15px;
+}
+
+    .user,
+.ai{
+
+    max-width:70%;
+
+    padding:12px 18px;
+
+    border-radius:18px;
+
+    margin:8px;
+
+    white-space:pre-wrap;
+
+    word-break:break-word;
+
+    overflow-wrap:anywhere;
+
+    box-sizing:border-box;
+}
+
+    .user {
+        background: var(--primary-color);
+        color: white;
+        border-radius: 10px 10px 0 10px;
+    }
+
+    .ai {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 10px 10px 10px 0;
+    }
+
+    /* 게시판 테이블 스타일 */
+    .post-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .post-table th {
+        text-align: left;
+        padding: 12px 5px;
+        border-bottom: 2px solid var(--border-color);
+        color: var(--text-sub);
+        font-weight: normal;
+    }
+
+    .post-table td {
+        padding: 15px 5px;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-main);
+    }
+
+    .post-table tr:hover td { background: #f9f9f9; }
+
+    /* 반응형 (간단하게) */
+    @media (max-width: 1000px) {
+        .grid-container { grid-template-columns: 1fr; }
+    }
+    .screen { display: none; }
+.screen.active { display: block; }
+.contents
+{
+    height:800px;
+    width:1000px;
+    overflow-y:auto;
+    overflow-x:hidden;
+
+    display:flex;
+    flex-direction:column;
+
+    background:#f5f7fb;
+    border-radius:15px;
+    padding:15px;
+}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+    <div class="logo">💙 AI 케어 시스템</div>
+    <div class="profile-short">
+        <div class="avatar"></div>
+        <div>
+            <strong>김철수</strong> (Chulsoo Kim)
+            <div style="font-size:12px; color:var(--text-sub);">노인회원</div>
+        </div>
+    </div>
+    <div class="menu-list">
+        <a href="#" onclick="showScreen('dashboard-screen')">대시보드</a>
+          <a href="#" onclick="showScreen('dashboard-screen')">출석체크</a>
+         <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
+        <a href="#board">커뮤니티 게시판</a>
+       <a href="#" onclick="showScreen('notice-screen')">공지사항 및 자주 보는 게시판</a>
+        <a href="#">설정</a>
+    </div>
+</nav>
+
+<main id="dashboard-screen" class="screen active">
+
+    <header>
+        <h1 class="page-title">사용자 통합 대시보드</h1>
+        <div class="top-profile">
+            <button class="app-check-btn">출석 확인! App Check!</button>
+            <div class="avatar"></div>
+            <span>안녕하세요, 김철수님</span>
+        </div>
+    </header>
+
+    <div class="grid-container">
+        <section class="card">
+            <h2>📅 출석체크</h2>
+            <button onclick="attend()" class="btn-custom">출석하기</button>
+            <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
+
+            <table class="calendar-table">
+                <thead>
+                    <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
+                </thead>
+                <tbody id="calendarBody">
+                    <tr>
+                        <td></td><td></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+                    </tr>
+                    <tr>
+                        <td>6</td><td>7</td><td>8</td><td class="checked today">9</td><td class="checked">10</td><td>11</td><td>12</td>
+                    </tr>
+                    <tr>
+                        <td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td>
+                    </tr>
+                    <tr>
+                        <td colspan="7" style="color:var(--text-sub); font-size:12px; padding-top:15px;">* 예시 화면입니다.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>🤖 AI 상담</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
+                <button onclick="clearChat()" class="btn-danger">대화 내용 삭제</button>
+            </div>
+            <div id="chat" class="chat"></div>
+            <textarea id="input" placeholder="궁금한 점을 물어보세요..." rows="2"></textarea>
+            <div style="text-align:right;">
+                <button onclick="voiceInput()" class="btn-custom" style="background:var(--accent-color);">🎤 음성 입력</button>
+                <button onclick="ask()" class="btn-custom">전송</button>
+            </div>
+        </section>
+    </div>
+
+    <section class="card" style="margin-top:20px;">
+        <h2>📝 커뮤니티 게시판</h2>
+        <div style="margin-bottom:15px;">
+            <input id="title" placeholder="제목을 입력하세요" style="padding:10px; width:300px;">
+            <input id="content" placeholder="내용을 입력하세요" style="padding:10px; width:400px;">
+            <button onclick="writePost()" class="btn-custom">게시글 작성</button>
+        </div>
+
+        <table class="post-table">
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>제목</th>
+                    <th>작성자</th>
+                    <th>조회수</th>
+                    <th>작성일</th>
+                </tr>
+            </thead>
+            <tbody id="board">
+                </tbody>
+        </table>
+    </section>
+
+
+</main>
+<section id="notice-screen" class="screen" style="padding: 30px;">
+    <h2>📢 공지사항</h2>
+    <div class="card">
+         <a href="#" onclick="showScreen('abc')">키오스크</a>
+       <a href="#" onclick="showScreen('def')">카카오택시</a>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
+</section>
+<section id="abc" class="screen" style="padding: 30px;">
+     <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
+    <div class="contents">
+    <h2>    키오스크 안내</h2>
+    <p>키오스크 사용법
+    </p>
+    <div>안녕하세요, 돌봄이 에이전트입니다.</div>
+    <p>오늘은 한 번 키오스크 사용법에 대해 알아 볼건데요</p>
+    <p>일단 키오스크에 가게 된다면 아무 화면을 클릭하세요</p>
+    <p>그리고 나면 메뉴가 뜰것입니다. 생각해두신 메뉴나 드시고 싶은 메뉴가 있으시다면</p>
+    <p>옆에 보이는 화면에서 특성을 기준으로 찾아보세요</p>
+    <p>드시고 싶은 메뉴를 선택한다면 추가적으로 더 메뉴에 추가할 것인지 뜰것입니다.</p>
+    <p>만약 메뉴에 포함된 음식이나 혹은 추가로 담을 음식이 있다면 선택을 아니면 선택 안함을 눌러주세요</p>
+    <p>이후 결제 방법을 선택후 결제를 진행하세요 이상 키오스크 안내법이였습니다. 
+        
+    </p>
+    <p>이제 모의 연습을 한 번해보자고요</p>
+    <a href=" https://billyux.github.io/mc/">여기를 클릭하시면 모의 연습으로 넘어갑니다></a>
+    </div>
+   
+</section>
+<section id="def" class="screen" style="padding: 30px;">
+     <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
+    <div class="contents">
+    <h2>    키오스크 안내</h2>
+    <p>키오스크 사용법
+    </p>
+    <div>안녕하세요, 돌봄이 에이전트입니다.</div>
+    <p>오늘은 한 번 카카오택시 사용법에 대해 알아 볼건데요</p>
+    <p>일단 카카오택시를 설치해주세요</p>
+    <p>그리고 나면 카카오택시를 열면 택시 아이콘이 보일것입니다.</p>
+    <p>택시 아이콘을 클릭해주세요</p>
+    <p>그러면 이렇게 지도가 뜰것입니다. 이제 도착지를 설정해주세요</p>
+    <p>도착지를 설정하면 경로와 금액이 뜰것입니다. 이후 택시 기종을 선택하시고</p>
+    <p>예약 하시면 택시를 초기 장소에서 기다리시면 됩니다. 
+        
+    </p>
+    <p>이제 모의 연습을 한 번해보자고요</p>
+    <a href=" https://billyux.github.io/webprogramming-5/">여기를 클릭하시면 모의 연습으로 넘어갑니다></a>
+    </div>
+   
+</section>
+<script>
+const API_KEY = "AQ.Ab8RN6Ik0lS9eenl2tw4DdFr5qj9Yf1Cbr9L0eum1OQBxCwnFQ";
+
+/* ======================
+   📅 달력 생성
+====================== */
+function createCalendar(){
+
+    const body = document.getElementById("calendarBody");
+    body.innerHTML = "";
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const todayDate = now.getDate();
+
+    let tr = document.createElement("tr");
+
+    // 앞 빈칸
+    for(let i=0;i<firstDay;i++){
+        tr.appendChild(document.createElement("td"));
+    }
+
+    for(let day=1;day<=lastDate;day++){
+
+        const td = document.createElement("td");
+        td.textContent = day;
+
+        // 오늘 표시
+        if(day === todayDate){
+            td.classList.add("today");
+        }
+
+        // 출석 데이터 불러오기
+        const key = `${year}-${month}-${day}`;
+        const data = JSON.parse(localStorage.getItem("attData") || "{}");
+
+        if(data[key] === "checked"){
+            td.classList.add("checked");
+        }
+
+        tr.appendChild(td);
+
+        if((firstDay + day) % 7 === 0){
+            body.appendChild(tr);
+            tr = document.createElement("tr");
+        }
+    }
+
+    body.appendChild(tr);
+}
+
+/* ======================
+   ✅ 출석체크
+====================== */
+function attend(){
+
+    const now = new Date();
+    const key = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+
+    let data = JSON.parse(localStorage.getItem("attData") || "{}");
+
+    data[key] = "checked";
+
+    localStorage.setItem("attData", JSON.stringify(data));
+
+    document.getElementById("attText").innerText =
+        "오늘 출석 완료 👍";
+
+    createCalendar(); // 다시 그려서 반영
+}
+
+/* ======================
+   🎤 음성 입력
+====================== */
+function voiceInput(){
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if(!SpeechRecognition){
+        alert("음성인식 지원 안됨");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ko-KR";
+
+    recognition.start();
+
+    recognition.onresult = (e)=>{
+        document.getElementById("input").value =
+            e.results[0][0].transcript;
+    };
+}
+
+/* ======================
+   🤖 AI
+====================== */
+function add(role,text){
+    const div = document.createElement("div");
+    div.className = role;
+    div.innerText = text;
+    document.getElementById("chat").appendChild(div);
+}
+
+function showLoading(){
+    const div = document.createElement("div");
+    div.className = "ai";
+    div.innerText = "AI 응답 중...";
+    document.getElementById("chat").appendChild(div);
+    return div;
+}
+
+function clearChat(){
+    document.getElementById("chat").innerHTML = "";
+}
+
+async function ask(){
+
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if(!text) return;
+
+    add("user", text);
+    input.value = "";
+
+    const loading = showLoading();
+
+    try{
+        const res = await fetch(
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY,
+            {
+                method:"POST",
+                headers:{ "Content-Type":"application/json" },
+                body:JSON.stringify({
+                    contents:[{
+                        parts:[{
+                            text: "친절한 고령자 AI입니다. 질문: " + text
+                        }]
+                    }]
+                })
+            }
+        );
+
+        const data = await res.json();
+        loading.remove();
+
+        const answer =
+            data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        add("ai", answer || "응답 없음");
+
+    }catch(err){
+        loading.remove();
+        add("ai", "오류: " + err.message);
+    }
+}
+
+/* ======================
+   📝 게시판
+====================== */
+function getPosts(){
+    return JSON.parse(localStorage.getItem("posts") || "[]");
+}
+
+function writePost(){
+
+    const title = document.getElementById("title").value;
+    const content = document.getElementById("content").value;
+
+    if(!title || !content) return;
+
+    let posts = getPosts();
+
+    posts.push({
+        id: Date.now(),
+        title,
+        content,
+        date: new Date().toLocaleDateString()
+    });
+
+    localStorage.setItem("posts", JSON.stringify(posts));
+
+    loadBoard();
+}
+
+function loadBoard(){
+
+    const board = document.getElementById("board");
+    board.innerHTML = "";
+
+    getPosts().forEach((p,i)=>{
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td>${p.title}</td>
+            <td>김철수</td>
+            <td>0</td>
+            <td>${p.date}</td>
+            <td><button onclick="deletePost(${p.id})">삭제</button></td>
+        `;
+
+        board.appendChild(tr);
+    });
+}
+
+function deletePost(id){
+    let posts = getPosts().filter(p => p.id !== id);
+    localStorage.setItem("posts", JSON.stringify(posts));
+    loadBoard();
+}
+
+/* ======================
+   🚀 시작
+====================== */
+window.onload = () => {
+
+    createCalendar();
+    loadBoard();
+
+    const att = localStorage.getItem("attData");
+    if(att){
+        document.getElementById("attText").innerText =
+            "출석 데이터 있음";
+    }
+};//여기서부터 다른줄
+async function ask() {
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    add("user", text);
+    input.value = "";
+    const loading = showLoading();
+
+    try {
+        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{
+                    role: "user",
+                    parts: [{ text: text }]
+                }]
+            })
+        });
+
+        const data = await res.json();
+        loading.remove();
+
+        // 응답 데이터 구조 확인용 로그 (개발자 도구 콘솔 확인)
+        console.log("API 응답:", data);
+
+        if (data.error) {
+            add("ai", "❌ API 오류: " + data.error.message);
+        } else if (data.candidates && data.candidates[0].content.parts[0].text) {
+            const answer = data.candidates[0].content.parts[0].text;
+            add("ai", answer);
+            speak(answer);
+        } else {
+            add("ai", "🤔 AI가 응답을 생성하지 못했습니다. (필터링되었을 수 있습니다)");
+        }
+
+    } catch (err) {
+        loading.remove();
+        add("ai", "❌ 네트워크 오류: " + err.message);
+    }
+}
+
+// =====================
+// 로딩
+// =====================
+function showLoading(){
+
+    const chat = document.getElementById("chat");
+
+    const div = document.createElement("div");
+    div.className = "step";
+    div.innerText = "🤔 AI가 생각 중...";
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+
+    return div;
+}
+
+// =====================
+// 채팅 UI
+// =====================
+function add(type, text){
+
+    const chat = document.getElementById("chat");
+
+    const div = document.createElement("div");
+    div.className = type;
+    div.innerText = text;
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+// =====================
+// 🎤 음성 입력 (SpeechRecognition)
+// =====================
+function voiceInput(){
+
+    const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if(!SpeechRecognition){
+        alert("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        return;
+    }
+
+    const rec = new SpeechRecognition();
+    rec.lang = "ko-KR";
+    rec.interimResults = false;
+
+    rec.start();
+
+    rec.onresult = (e) => {
+        const text = e.results[0][0].transcript;
+        document.getElementById("input").value = text;
+    };
+
+    rec.onerror = () => {
+        alert("음성 인식 실패");
+    };
+}
+
+// =====================
+// 🔊 음성 출력 (TTS)
+// =====================
+function speak(text){
+
+    speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+
+    utter.lang = "ko-KR";
+    utter.rate = 1;
+    utter.pitch = 1;
+
+    speechSynthesis.speak(utter);
+}
+
+// =====================
+// 게시판
+// =====================
+
+// =====================
+// 게시판
+// =====================
+
+function getPosts(){
+    return JSON.parse(localStorage.getItem("posts") || "[]");
+}
+
+function writePost(){
+
+    const title = document.getElementById("title").value.trim();
+    const content = document.getElementById("content").value.trim();
+
+    if(!title || !content){
+        alert("제목과 내용을 입력하세요.");
+        return;
+    }
+
+    let posts = getPosts();
+
+    posts.unshift({
+        id:Date.now(),
+        title,
+        content,
+        date:new Date().toLocaleDateString(),
+        views:0
+    });
+
+    localStorage.setItem("posts",JSON.stringify(posts));
+
+    document.getElementById("title").value="";
+    document.getElementById("content").value="";
+
+    loadBoard();
+}
+
+function loadBoard(){
+
+    const board=document.getElementById("board");
+
+    board.innerHTML="";
+
+    const posts=getPosts();
+
+    posts.forEach((p,index)=>{
+
+        const titleRow=document.createElement("tr");
+
+        titleRow.innerHTML=`
+            <td>${posts.length-index}</td>
+
+            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold"
+                onclick="openPost(${p.id})">
+
+                ${p.title}
+
+            </td>
+
+            <td>김철수</td>
+
+            <td>${p.views}</td>
+
+            <td>${p.date}</td>
+        `;
+
+        board.appendChild(titleRow);
+
+    });
+
+}
+
+function openPost(id){
+
+    let posts=getPosts();
+
+    const post=posts.find(p=>p.id===id);
+
+    post.views++;
+
+    localStorage.setItem("posts",JSON.stringify(posts));
+
+    alert(
+`제목 : ${post.title}
+
+--------------------------
+
+${post.content}
+
+--------------------------
+
+작성일 : ${post.date}`
+    );
+
+    loadBoard();
+
+}
+
+function deletePost(id){
+
+    let posts=getPosts().filter(p=>p.id!==id);
+
+    localStorage.setItem("posts",JSON.stringify(posts));
+
+    loadBoard();
+
+}
+function showScreen(screenId) {
+        // 모든 screen 클래스를 가진 요소에서 active 제거
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        // 선택한 screenId에만 active 추가
+        document.getElementById(screenId).classList.add('active');
+    }
+</script>
+</body>
+</html>
