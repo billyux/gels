@@ -19,9 +19,18 @@ supabase secrets set GEMINI_API_KEY=<키> --project-ref sqxvkpavtwpglneamntd
 ```
 
 ## Auth 설정 (대시보드/Management API로 수동 설정, migration에 안 잡힘)
-노인 사용자는 이메일이 없는 경우가 많아 이메일 대신 전화번호+비밀번호 로그인을 사용합니다.
-Supabase 대시보드 > Authentication > Providers > Phone 에서:
-- **Enable Phone provider**: on
-- **Confirm phone number**: off (SMS 발송 없이 즉시 가입/로그인되도록 — 별도 SMS 프로바이더(Twilio 등) 비용 없이 사용하기 위함)
+노인 사용자는 이메일/전화번호 인증 자체가 번거로워서, 최종적으로 **아이디 + 비밀번호** 방식으로 정착했습니다.
+Supabase Auth는 로그인 식별자로 email 또는 phone만 지원하므로, 프론트엔드(`index.html`)에서 입력받은
+아이디를 `아이디@gels.local` 형식의 가짜 이메일로 변환해서 내부적으로만 사용합니다 (실제 메일 발송 없음).
 
-이미 이 프로젝트(`sqxvkpavtwpglneamntd`)에는 적용되어 있습니다. 새 프로젝트로 옮길 경우 위 두 옵션을 꼭 다시 켜주세요.
+Supabase 대시보드 > Authentication > Providers > Email 에서:
+- **Confirm email**: off (`mailer_autoconfirm = true`) — 가짜 도메인이라 인증 메일을 받을 수 없으므로 반드시 꺼야 함
+
+회원가입(`signUp`) 성공 시 Supabase가 세션을 즉시 내려주므로, 별도로 로그인 버튼을 누를 필요 없이
+그대로 대시보드로 진입합니다 (`enterApp()` 자동 호출).
+
+Phone provider(`external_phone_enabled`, `sms_autoconfirm`)는 이전 시도의 흔적으로 켜져 있지만
+현재 프론트엔드는 사용하지 않습니다. 안 쓰면 대시보드에서 꺼도 무방합니다.
+
+이미 이 프로젝트(`sqxvkpavtwpglneamntd`)에는 `mailer_autoconfirm=true`가 적용되어 있습니다.
+새 프로젝트로 옮길 경우 위 옵션을 꼭 다시 켜주세요.

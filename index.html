@@ -459,7 +459,7 @@
 <section id="settings-screen" class="screen" style="padding: 30px;">
     <h2>⚙️ 설정</h2>
     <div class="card" style="max-width:400px;">
-        <p id="settingsPhone" style="color:var(--text-sub);"></p>
+        <p id="settingsUsername" style="color:var(--text-sub);"></p>
         <button onclick="logout()" class="btn-danger" style="width:100%; padding:10px; font-size:14px;">로그아웃</button>
     </div>
     <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
@@ -470,7 +470,7 @@
         <p style="color:var(--text-sub); font-size:14px; margin-top:-10px;">고령자 AI 케어에 오신 것을 환영합니다.</p>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
             <input id="authName" placeholder="이름 (회원가입 시에만 입력)" style="padding:10px;">
-            <input id="authPhone" type="tel" placeholder="전화번호 (예: 01012345678)" style="padding:10px;">
+            <input id="authUsername" placeholder="아이디 (영문/숫자)" style="padding:10px;">
             <input id="authPassword" type="password" placeholder="비밀번호 (6자 이상)" style="padding:10px;">
             <button onclick="signIn()" class="btn-custom">로그인</button>
             <button onclick="signUp()" class="btn-custom" style="background:var(--accent-color);">회원가입</button>
@@ -490,31 +490,30 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 /* ======================
    🔐 로그인 / 회원가입
 ====================== */
-// 한국 휴대폰 번호(예: 010-1234-5678, 01012345678)를 Supabase가 요구하는
-// 국가코드 형식(821012345678)으로 변환합니다.
-function normalizePhone(raw){
-    const digits = raw.replace(/\D/g, "");
-    if(digits.startsWith("0")) return "82" + digits.slice(1);
-    if(digits.startsWith("82")) return digits;
-    return digits;
+// Supabase Auth는 아이디 개념이 없어서, 입력받은 아이디를
+// 내부적으로 "아이디@gels.local" 형식의 이메일로 변환해 사용합니다.
+// (실제 메일은 절대 발송되지 않고, 이메일 인증도 꺼둔 상태)
+function usernameToEmail(raw){
+    const cleaned = raw.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
+    return cleaned + "@gels.local";
 }
 
 async function signUp(){
     const name = document.getElementById("authName").value.trim();
-    const phone = normalizePhone(document.getElementById("authPhone").value.trim());
+    const username = document.getElementById("authUsername").value.trim();
     const password = document.getElementById("authPassword").value;
     const errEl = document.getElementById("authError");
     errEl.style.color = "#ff7676";
     errEl.textContent = "";
 
-    if(!name || !phone || !password){
-        errEl.textContent = "이름, 전화번호, 비밀번호를 모두 입력하세요.";
+    if(!name || !username || !password){
+        errEl.textContent = "이름, 아이디, 비밀번호를 모두 입력하세요.";
         return;
     }
 
     const { error } = await sb.auth.signUp({
-        phone, password,
-        options: { data: { display_name: name } }
+        email: usernameToEmail(username), password,
+        options: { data: { display_name: name, username } }
     });
 
     if(error){
@@ -522,18 +521,18 @@ async function signUp(){
         return;
     }
 
-    errEl.style.color = "var(--primary-color)";
-    errEl.textContent = "가입 완료! 로그인해주세요.";
+    // 가입과 동시에 로그인 세션이 발급되므로, 따로 로그인 버튼을 누를 필요 없이 바로 입장
+    await enterApp();
 }
 
 async function signIn(){
-    const phone = normalizePhone(document.getElementById("authPhone").value.trim());
+    const username = document.getElementById("authUsername").value.trim();
     const password = document.getElementById("authPassword").value;
     const errEl = document.getElementById("authError");
     errEl.style.color = "#ff7676";
     errEl.textContent = "";
 
-    const { error } = await sb.auth.signInWithPassword({ phone, password });
+    const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(username), password });
     if(error){
         errEl.textContent = error.message;
         return;
@@ -561,10 +560,11 @@ async function enterApp(){
         .eq("id", user.id)
         .single();
 
-    const name = profile?.display_name || user.phone;
+    const username = user.user_metadata?.username || user.email.split("@")[0];
+    const name = profile?.display_name || username;
     document.getElementById("sidebarName").textContent = name;
     document.getElementById("topProfileName").textContent = `안녕하세요, ${name}님`;
-    document.getElementById("settingsPhone").textContent = `로그인 계정: ${user.phone}`;
+    document.getElementById("settingsUsername").textContent = `로그인 아이디: ${username}`;
 
     document.body.classList.add("authed");
     showScreen("dashboard-screen");
