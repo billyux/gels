@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>고령자 AI 케어 - 통합 대시보드</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <style>
     /* ----------------------------------
        디자인 테마 변수 설정 (이미지 기준)
@@ -545,7 +547,7 @@
     <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
 </section>
 <section id="shelter-screen" class="screen" style="padding: 30px;">
-    <h2>🗺️ 부산진구 무더위쉼터 지도</h2>
+    <h2>🗺️ 부산 무더위쉼터 지도</h2>
     <p id="shelterStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;"></p>
     <div class="card" style="padding:10px;">
         <div id="shelterMap" style="height:520px; border-radius:12px;"></div>
@@ -607,6 +609,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script>
 /* ======================
    🔌 Supabase 초기화
@@ -1097,14 +1100,15 @@ async function openShelterScreen(){
     showScreen("shelter-screen");
 
     if(!shelterMap){
-        shelterMap = L.map("shelterMap").setView([35.162, 129.053], 14);
+        shelterMap = L.map("shelterMap").setView([35.18, 129.075], 11);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         }).addTo(shelterMap);
 
-        shelterMarkersLayer = L.layerGroup().addTo(shelterMap);
+        shelterMarkersLayer = L.markerClusterGroup();
+        shelterMap.addLayer(shelterMarkersLayer);
     }
 
     setTimeout(() => shelterMap.invalidateSize(), 100);
@@ -1115,7 +1119,8 @@ async function openShelterScreen(){
     try{
         const { data: { session } } = await sb.auth.getSession();
 
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/shelters?sggCd=26230`, {
+        // sggCd=26 → 부산광역시 전체 (구/군별로 보려면 예: 26230=부산진구)
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/shelters?sggCd=26`, {
             headers: {
                 "Authorization": `Bearer ${session.access_token}`,
                 "apikey": SUPABASE_KEY
@@ -1130,17 +1135,17 @@ async function openShelterScreen(){
 
         shelterMarkersLayer.clearLayers();
 
-        data.shelters.forEach((s) => {
-            L.marker([s.lat, s.lng])
-                .bindPopup(
-                    `<strong>${s.name}</strong><br>${s.address}<br>` +
-                    `수용인원: ${s.capacity ?? "정보 없음"}명<br>` +
-                    `에어컨: ${s.aircon ? "있음" : "없음"}`
-                )
-                .addTo(shelterMarkersLayer);
-        });
+        const markers = data.shelters.map((s) =>
+            L.marker([s.lat, s.lng]).bindPopup(
+                `<strong>${s.name}</strong><br>${s.address}<br>` +
+                `수용인원: ${s.capacity ?? "정보 없음"}명<br>` +
+                `에어컨: ${s.aircon ? "있음" : "없음"}`
+            )
+        );
 
-        statusEl.textContent = `부산진구 무더위쉼터 ${data.shelters.length}곳을 표시했습니다. 지도 위 점을 눌러보세요.`;
+        shelterMarkersLayer.addLayers(markers);
+
+        statusEl.textContent = `부산 전체 무더위쉼터 ${data.shelters.length}곳을 표시했습니다. 지도를 확대하면 개별 위치가 보여요.`;
     }catch(err){
         statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + err.message;
     }
