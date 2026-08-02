@@ -16,8 +16,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const url = new URL(req.url);
-  // 기본값: 부산진구(26230)
-  const sggCd = url.searchParams.get("sggCd") || "26230";
+  // 기본값: 부산광역시 전체(26) — 구/군 코드(예: 26230=부산진구)를 넘기면 해당 구만 조회
+  const sggCd = url.searchParams.get("sggCd") || "26";
 
   try {
     const res = await fetch(SOURCE_URL, {
@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
         "Accept": "application/json, text/javascript, */*; q=0.01",
         "Referer": "https://www.safekorea.go.kr/safekorea-kor/flsm/flsm/facilitiesSafteyMap.do?menuSn=2&baseMapNm=naver",
       },
-      body: `tableNm=TFK_HTW_RSTR_TEMP&tableKorNm=${encodeURIComponent("무더위쉼터")}&sggCd=${sggCd}&page=1&size=1000`,
+      body: `tableNm=TFK_HTW_RSTR_TEMP&tableKorNm=${encodeURIComponent("무더위쉼터")}&sggCd=${sggCd}&page=1&size=3000`,
     });
 
     const data = await res.json();
