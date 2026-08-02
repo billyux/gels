@@ -181,6 +181,30 @@
         border: 2px solid var(--primary-color);
     }
 
+    /* 물 마시기 달력: 목표 미달 진행중 표시 */
+    .calendar-table td.partial {
+        background: #fff3d6;
+        color: #b8860b;
+        font-weight: bold;
+    }
+
+    .cup-dot {
+        width: 20px; height: 20px;
+        border-radius: 50%;
+        border: 2px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        flex: none;
+    }
+
+    .cup-dot.filled {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: white;
+    }
+
     /* 버튼 스타일 수정 */
     .btn-custom {
         background: var(--primary-color);
@@ -540,8 +564,26 @@
 
     <div class="card" style="max-width:420px; margin-top:20px;">
         <p id="tempMessage" style="font-size:14.5px; margin:0 0 16px;"></p>
-        <button onclick="confirmWaterDrink()" class="btn-custom">물 마셨어요 👍</button>
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
+            <span style="font-size:14px; color:var(--text-sub);">오늘 마신 물</span>
+            <span id="waterTodayCount" style="font-size:20px; font-weight:700; color:var(--primary-color);">0 / 8잔</span>
+        </div>
+        <div id="waterCupDots" style="display:flex; gap:6px; margin-bottom:16px;"></div>
+
+        <button onclick="drinkWater()" class="btn-custom">물 한 잔 마셨어요 👍</button>
         <p id="waterConfirmMsg" style="font-size:13px; color:var(--primary-color); margin-top:10px; min-height:18px;"></p>
+    </div>
+
+    <div class="card" style="max-width:420px; margin-top:20px;">
+        <h2 style="font-size:16px;">📅 이번 달 물 마시기 기록</h2>
+        <table class="calendar-table">
+            <thead>
+                <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
+            </thead>
+            <tbody id="waterCalendarBody"></tbody>
+        </table>
+        <p style="font-size:12px; color:var(--text-sub); margin-top:10px;">숫자는 그날 마신 물잔 수예요. 목표(8잔)를 채우면 초록색으로 표시돼요.</p>
     </div>
 
     <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
@@ -1084,10 +1126,122 @@ async function openTempScreen(){
     }catch(err){
         statusEl.textContent = "기온 정보를 불러오지 못했습니다: " + err.message;
     }
+
+    await loadWaterToday();
+    await loadWaterCalendar();
 }
 
-function confirmWaterDrink(){
-    document.getElementById("waterConfirmMsg").textContent = "오늘 물 마신 걸 기록했어요 👍";
+/* ======================
+   💧 물 마시기 기록
+====================== */
+const WATER_GOAL = 8;
+
+function todayStr(){
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+function renderCupDots(cups){
+    const wrap = document.getElementById("waterCupDots");
+    wrap.innerHTML = "";
+
+    for(let i = 1; i <= WATER_GOAL; i++){
+        const dot = document.createElement("div");
+        dot.className = "cup-dot" + (i <= cups ? " filled" : "");
+        dot.textContent = i <= cups ? "💧" : "";
+        wrap.appendChild(dot);
+    }
+}
+
+async function loadWaterToday(){
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
+
+    const { data } = await sb
+        .from("water_log")
+        .select("cups")
+        .eq("user_id", user.id)
+        .eq("logged_on", todayStr())
+        .maybeSingle();
+
+    const cups = data?.cups || 0;
+    document.getElementById("waterTodayCount").textContent = `${cups} / ${WATER_GOAL}잔`;
+    renderCupDots(cups);
+}
+
+async function drinkWater(){
+    // DB에서 원자적으로 +1 처리 (읽고-다시-쓰는 방식은 빠르게 연속 클릭할 때 카운트가 씹힐 수 있음)
+    const { error } = await sb.rpc("increment_water", { p_date: todayStr() });
+
+    const msgEl = document.getElementById("waterConfirmMsg");
+
+    if(error){
+        msgEl.textContent = "기록 실패: " + error.message;
+        return;
+    }
+
+    msgEl.textContent = "오늘 물 마신 걸 기록했어요 👍";
+    await loadWaterToday();
+    await loadWaterCalendar();
+}
+
+async function loadWaterCalendar(){
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
+
+    const body = document.getElementById("waterCalendarBody");
+    body.innerHTML = "";
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const todayDate = now.getDate();
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const lastDate = new Date(year, month + 1, 0).getDate();
+
+    const pad = (n) => String(n).padStart(2, "0");
+    const monthStart = `${year}-${pad(month + 1)}-01`;
+    const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
+
+    const { data: rows } = await sb
+        .from("water_log")
+        .select("logged_on, cups")
+        .eq("user_id", user.id)
+        .gte("logged_on", monthStart)
+        .lte("logged_on", monthEnd);
+
+    const cupsByDay = {};
+    (rows || []).forEach((r) => {
+        cupsByDay[Number(r.logged_on.split("-")[2])] = r.cups;
+    });
+
+    let tr = document.createElement("tr");
+
+    for(let i = 0; i < firstDay; i++){
+        tr.appendChild(document.createElement("td"));
+    }
+
+    for(let day = 1; day <= lastDate; day++){
+        const td = document.createElement("td");
+        const cups = cupsByDay[day] || 0;
+
+        td.textContent = cups > 0 ? `${day}(${cups})` : day;
+
+        if(day === todayDate) td.classList.add("today");
+        if(cups >= WATER_GOAL) td.classList.add("checked");
+        else if(cups > 0) td.classList.add("partial");
+
+        tr.appendChild(td);
+
+        if((firstDay + day) % 7 === 0){
+            body.appendChild(tr);
+            tr = document.createElement("tr");
+        }
+    }
+
+    body.appendChild(tr);
 }
 
 /* ======================
