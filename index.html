@@ -759,7 +759,8 @@ async function createCalendar(){
     const month = now.getMonth(); // 0-indexed
     const todayDate = now.getDate();
 
-    const firstDay = new Date(year, month, 1).getDay();
+    // getDay()는 일요일=0 기준인데, 표 헤더는 월~일 순서라 월요일=0으로 맞춰줘야 함
+    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
     const lastDate = new Date(year, month + 1, 0).getDate();
 
     const pad = (n) => String(n).padStart(2, "0");
@@ -1198,7 +1199,8 @@ async function loadWaterCalendar(){
     const month = now.getMonth();
     const todayDate = now.getDate();
 
-    const firstDay = new Date(year, month, 1).getDay();
+    // getDay()는 일요일=0 기준인데, 표 헤더는 월~일 순서라 월요일=0으로 맞춰줘야 함
+    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
     const lastDate = new Date(year, month + 1, 0).getDate();
 
     const pad = (n) => String(n).padStart(2, "0");
