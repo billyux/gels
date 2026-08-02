@@ -36,10 +36,12 @@
         background: var(--card-bg);
         border-right: 1px solid var(--border-color);
         padding: 30px;
-        display: flex;
+        display: none;
         flex-direction: column;
         box-sizing: border-box;
     }
+
+    body.authed .sidebar { display: flex; }
 
     .logo {
         font-size: 20px;
@@ -311,7 +313,7 @@
     <div class="profile-short">
         <div class="avatar"></div>
         <div>
-            <strong>김철수</strong> (Chulsoo Kim)
+            <strong id="sidebarName">-</strong>
             <div style="font-size:12px; color:var(--text-sub);">노인회원</div>
         </div>
     </div>
@@ -319,20 +321,20 @@
         <a href="#" onclick="showScreen('dashboard-screen')">대시보드</a>
           <a href="#" onclick="showScreen('dashboard-screen')">출석체크</a>
          <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
-        <a href="#board">커뮤니티 게시판</a>
+        <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
        <a href="#" onclick="showScreen('notice-screen')">공지사항 및 자주 보는 게시판</a>
-        <a href="#">설정</a>
+        <a href="#" onclick="showScreen('settings-screen')">설정</a>
     </div>
 </nav>
 
-<main id="dashboard-screen" class="screen active">
+<main id="dashboard-screen" class="screen">
 
     <header>
         <h1 class="page-title">사용자 통합 대시보드</h1>
         <div class="top-profile">
             <button class="app-check-btn">출석 확인! App Check!</button>
             <div class="avatar"></div>
-            <span>안녕하세요, 김철수님</span>
+            <span id="topProfileName">안녕하세요, 회원님</span>
         </div>
     </header>
 
@@ -394,6 +396,7 @@
                     <th>작성자</th>
                     <th>조회수</th>
                     <th>작성일</th>
+                    <th>관리</th>
                 </tr>
             </thead>
             <tbody id="board">
@@ -451,27 +454,145 @@
     <p>이제 모의 연습을 한 번해보자고요</p>
     <a href=" https://billyux.github.io/webprogramming-5/">여기를 클릭하시면 모의 연습으로 넘어갑니다></a>
     </div>
-   
+
 </section>
+<section id="settings-screen" class="screen" style="padding: 30px;">
+    <h2>⚙️ 설정</h2>
+    <div class="card" style="max-width:400px;">
+        <p id="settingsEmail" style="color:var(--text-sub);"></p>
+        <button onclick="logout()" class="btn-danger" style="width:100%; padding:10px; font-size:14px;">로그아웃</button>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
+<section id="auth-screen" class="screen active" style="padding: 60px 20px;">
+    <div class="card" style="max-width:380px; margin:0 auto;">
+        <h2>💙 로그인 / 회원가입</h2>
+        <p style="color:var(--text-sub); font-size:14px; margin-top:-10px;">고령자 AI 케어에 오신 것을 환영합니다.</p>
+        <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
+            <input id="authName" placeholder="이름 (회원가입 시에만 입력)" style="padding:10px;">
+            <input id="authEmail" type="email" placeholder="이메일" style="padding:10px;">
+            <input id="authPassword" type="password" placeholder="비밀번호 (6자 이상)" style="padding:10px;">
+            <button onclick="signIn()" class="btn-custom">로그인</button>
+            <button onclick="signUp()" class="btn-custom" style="background:var(--accent-color);">회원가입</button>
+            <p id="authError" style="color:#ff7676; font-size:13px; min-height:18px;"></p>
+        </div>
+    </div>
+</section>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-const API_KEY = "AQ.Ab8RN6Ik0lS9eenl2tw4DdFr5qj9Yf1Cbr9L0eum1OQBxCwnFQ";
+/* ======================
+   🔌 Supabase 초기화
+====================== */
+const SUPABASE_URL = "https://sqxvkpavtwpglneamntd.supabase.co";
+const SUPABASE_KEY = "sb_publishable_nEam_xtX_VDlCBgABD4-4g_LTiVBK8i";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ======================
+   🔐 로그인 / 회원가입
+====================== */
+async function signUp(){
+    const name = document.getElementById("authName").value.trim();
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const errEl = document.getElementById("authError");
+    errEl.style.color = "#ff7676";
+    errEl.textContent = "";
+
+    if(!name || !email || !password){
+        errEl.textContent = "이름, 이메일, 비밀번호를 모두 입력하세요.";
+        return;
+    }
+
+    const { error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { display_name: name } }
+    });
+
+    if(error){
+        errEl.textContent = error.message;
+        return;
+    }
+
+    errEl.style.color = "var(--primary-color)";
+    errEl.textContent = "가입 완료! (이메일 인증이 켜져 있다면 인증 후) 로그인해주세요.";
+}
+
+async function signIn(){
+    const email = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const errEl = document.getElementById("authError");
+    errEl.style.color = "#ff7676";
+    errEl.textContent = "";
+
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){
+        errEl.textContent = error.message;
+        return;
+    }
+
+    await enterApp();
+}
+
+async function logout(){
+    await sb.auth.signOut();
+    document.body.classList.remove("authed");
+    showScreen("auth-screen");
+}
+
+async function enterApp(){
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user){
+        showScreen("auth-screen");
+        return;
+    }
+
+    const { data: profile } = await sb
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user.id)
+        .single();
+
+    const name = profile?.display_name || user.email;
+    document.getElementById("sidebarName").textContent = name;
+    document.getElementById("topProfileName").textContent = `안녕하세요, ${name}님`;
+    document.getElementById("settingsEmail").textContent = `로그인 계정: ${user.email}`;
+
+    document.body.classList.add("authed");
+    showScreen("dashboard-screen");
+
+    await createCalendar();
+    await loadBoard();
+}
 
 /* ======================
    📅 달력 생성
 ====================== */
-function createCalendar(){
+async function createCalendar(){
 
     const body = document.getElementById("calendarBody");
     body.innerHTML = "";
 
     const now = new Date();
     const year = now.getFullYear();
-    const month = now.getMonth();
+    const month = now.getMonth(); // 0-indexed
+    const todayDate = now.getDate();
 
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
 
-    const todayDate = now.getDate();
+    const pad = (n) => String(n).padStart(2, "0");
+    const monthStart = `${year}-${pad(month + 1)}-01`;
+    const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
+
+    const { data: rows, error } = await sb
+        .from("attendance")
+        .select("attended_on")
+        .gte("attended_on", monthStart)
+        .lte("attended_on", monthEnd);
+
+    if(error) console.error(error);
+
+    const checkedDays = new Set((rows || []).map(r => Number(r.attended_on.split("-")[2])));
 
     let tr = document.createElement("tr");
 
@@ -490,11 +611,7 @@ function createCalendar(){
             td.classList.add("today");
         }
 
-        // 출석 데이터 불러오기
-        const key = `${year}-${month}-${day}`;
-        const data = JSON.parse(localStorage.getItem("attData") || "{}");
-
-        if(data[key] === "checked"){
+        if(checkedDays.has(day)){
             td.classList.add("checked");
         }
 
@@ -512,21 +629,27 @@ function createCalendar(){
 /* ======================
    ✅ 출석체크
 ====================== */
-function attend(){
+async function attend(){
+
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
 
     const now = new Date();
-    const key = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
+    const pad = (n) => String(n).padStart(2, "0");
+    const attendedOn = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-    let data = JSON.parse(localStorage.getItem("attData") || "{}");
+    const { error } = await sb
+        .from("attendance")
+        .upsert({ user_id: user.id, attended_on: attendedOn }, { onConflict: "user_id,attended_on" });
 
-    data[key] = "checked";
+    if(error){
+        document.getElementById("attText").innerText = "출석 처리 중 오류: " + error.message;
+        return;
+    }
 
-    localStorage.setItem("attData", JSON.stringify(data));
+    document.getElementById("attText").innerText = "오늘 출석 완료 👍";
 
-    document.getElementById("attText").innerText =
-        "오늘 출석 완료 👍";
-
-    createCalendar(); // 다시 그려서 반영
+    await createCalendar(); // 다시 그려서 반영
 }
 
 /* ======================
@@ -538,36 +661,63 @@ function voiceInput(){
         window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if(!SpeechRecognition){
-        alert("음성인식 지원 안됨");
+        alert("이 브라우저는 음성 인식을 지원하지 않습니다.");
         return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = "ko-KR";
+    const rec = new SpeechRecognition();
+    rec.lang = "ko-KR";
+    rec.interimResults = false;
 
-    recognition.start();
+    rec.start();
 
-    recognition.onresult = (e)=>{
-        document.getElementById("input").value =
-            e.results[0][0].transcript;
+    rec.onresult = (e) => {
+        document.getElementById("input").value = e.results[0][0].transcript;
+    };
+
+    rec.onerror = () => {
+        alert("음성 인식 실패");
     };
 }
 
 /* ======================
-   🤖 AI
+   🔊 음성 출력 (TTS)
 ====================== */
-function add(role,text){
+function speak(text){
+    speechSynthesis.cancel();
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "ko-KR";
+    utter.rate = 1;
+    utter.pitch = 1;
+
+    speechSynthesis.speak(utter);
+}
+
+/* ======================
+   🤖 AI 채팅
+====================== */
+function add(type, text){
+    const chat = document.getElementById("chat");
+
     const div = document.createElement("div");
-    div.className = role;
+    div.className = type;
     div.innerText = text;
-    document.getElementById("chat").appendChild(div);
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
 }
 
 function showLoading(){
+    const chat = document.getElementById("chat");
+
     const div = document.createElement("div");
     div.className = "ai";
-    div.innerText = "AI 응답 중...";
-    document.getElementById("chat").appendChild(div);
+    div.innerText = "🤔 AI가 생각 중...";
+
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+
     return div;
 }
 
@@ -587,238 +737,31 @@ async function ask(){
     const loading = showLoading();
 
     try{
-        const res = await fetch(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + API_KEY,
-            {
-                method:"POST",
-                headers:{ "Content-Type":"application/json" },
-                body:JSON.stringify({
-                    contents:[{
-                        parts:[{
-                            text: "친절한 고령자 AI입니다. 질문: " + text
-                        }]
-                    }]
-                })
-            }
-        );
-
-        const data = await res.json();
+        // Gemini 호출은 Supabase Edge Function을 통해 서버 사이드에서 처리합니다 (API 키 비노출)
+        const { data, error } = await sb.functions.invoke("ai-chat", { body: { text } });
         loading.remove();
 
-        const answer =
-            data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if(error){
+            add("ai", "❌ 오류: " + error.message);
+            return;
+        }
+        if(data.error){
+            add("ai", "❌ " + data.error);
+            return;
+        }
 
-        add("ai", answer || "응답 없음");
-
+        add("ai", data.answer);
+        speak(data.answer);
     }catch(err){
         loading.remove();
-        add("ai", "오류: " + err.message);
+        add("ai", "❌ 오류: " + err.message);
     }
 }
 
 /* ======================
    📝 게시판
 ====================== */
-function getPosts(){
-    return JSON.parse(localStorage.getItem("posts") || "[]");
-}
-
-function writePost(){
-
-    const title = document.getElementById("title").value;
-    const content = document.getElementById("content").value;
-
-    if(!title || !content) return;
-
-    let posts = getPosts();
-
-    posts.push({
-        id: Date.now(),
-        title,
-        content,
-        date: new Date().toLocaleDateString()
-    });
-
-    localStorage.setItem("posts", JSON.stringify(posts));
-
-    loadBoard();
-}
-
-function loadBoard(){
-
-    const board = document.getElementById("board");
-    board.innerHTML = "";
-
-    getPosts().forEach((p,i)=>{
-
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-            <td>${i+1}</td>
-            <td>${p.title}</td>
-            <td>김철수</td>
-            <td>0</td>
-            <td>${p.date}</td>
-            <td><button onclick="deletePost(${p.id})">삭제</button></td>
-        `;
-
-        board.appendChild(tr);
-    });
-}
-
-function deletePost(id){
-    let posts = getPosts().filter(p => p.id !== id);
-    localStorage.setItem("posts", JSON.stringify(posts));
-    loadBoard();
-}
-
-/* ======================
-   🚀 시작
-====================== */
-window.onload = () => {
-
-    createCalendar();
-    loadBoard();
-
-    const att = localStorage.getItem("attData");
-    if(att){
-        document.getElementById("attText").innerText =
-            "출석 데이터 있음";
-    }
-};//여기서부터 다른줄
-async function ask() {
-    const input = document.getElementById("input");
-    const text = input.value.trim();
-    if (!text) return;
-
-    add("user", text);
-    input.value = "";
-    const loading = showLoading();
-
-    try {
-        const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + API_KEY, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{
-                    role: "user",
-                    parts: [{ text: text }]
-                }]
-            })
-        });
-
-        const data = await res.json();
-        loading.remove();
-
-        // 응답 데이터 구조 확인용 로그 (개발자 도구 콘솔 확인)
-        console.log("API 응답:", data);
-
-        if (data.error) {
-            add("ai", "❌ API 오류: " + data.error.message);
-        } else if (data.candidates && data.candidates[0].content.parts[0].text) {
-            const answer = data.candidates[0].content.parts[0].text;
-            add("ai", answer);
-            speak(answer);
-        } else {
-            add("ai", "🤔 AI가 응답을 생성하지 못했습니다. (필터링되었을 수 있습니다)");
-        }
-
-    } catch (err) {
-        loading.remove();
-        add("ai", "❌ 네트워크 오류: " + err.message);
-    }
-}
-
-// =====================
-// 로딩
-// =====================
-function showLoading(){
-
-    const chat = document.getElementById("chat");
-
-    const div = document.createElement("div");
-    div.className = "step";
-    div.innerText = "🤔 AI가 생각 중...";
-
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-
-    return div;
-}
-
-// =====================
-// 채팅 UI
-// =====================
-function add(type, text){
-
-    const chat = document.getElementById("chat");
-
-    const div = document.createElement("div");
-    div.className = type;
-    div.innerText = text;
-
-    chat.appendChild(div);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-// =====================
-// 🎤 음성 입력 (SpeechRecognition)
-// =====================
-function voiceInput(){
-
-    const SpeechRecognition =
-        window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if(!SpeechRecognition){
-        alert("이 브라우저는 음성 인식을 지원하지 않습니다.");
-        return;
-    }
-
-    const rec = new SpeechRecognition();
-    rec.lang = "ko-KR";
-    rec.interimResults = false;
-
-    rec.start();
-
-    rec.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        document.getElementById("input").value = text;
-    };
-
-    rec.onerror = () => {
-        alert("음성 인식 실패");
-    };
-}
-
-// =====================
-// 🔊 음성 출력 (TTS)
-// =====================
-function speak(text){
-
-    speechSynthesis.cancel();
-
-    const utter = new SpeechSynthesisUtterance(text);
-
-    utter.lang = "ko-KR";
-    utter.rate = 1;
-    utter.pitch = 1;
-
-    speechSynthesis.speak(utter);
-}
-
-// =====================
-// 게시판
-// =====================
-
-// =====================
-// 게시판
-// =====================
-
-function getPosts(){
-    return JSON.parse(localStorage.getItem("posts") || "[]");
-}
-
-function writePost(){
+async function writePost(){
 
     const title = document.getElementById("title").value.trim();
     const content = document.getElementById("content").value.trim();
@@ -828,100 +771,102 @@ function writePost(){
         return;
     }
 
-    let posts = getPosts();
+    const { data: { user } } = await sb.auth.getUser();
+    if(!user) return;
 
-    posts.unshift({
-        id:Date.now(),
-        title,
-        content,
-        date:new Date().toLocaleDateString(),
-        views:0
-    });
+    const { error } = await sb.from("posts").insert({ user_id: user.id, title, content });
 
-    localStorage.setItem("posts",JSON.stringify(posts));
+    if(error){
+        alert("게시글 작성 실패: " + error.message);
+        return;
+    }
 
-    document.getElementById("title").value="";
-    document.getElementById("content").value="";
+    document.getElementById("title").value = "";
+    document.getElementById("content").value = "";
 
-    loadBoard();
+    await loadBoard();
 }
 
-function loadBoard(){
+async function loadBoard(){
 
-    const board=document.getElementById("board");
+    const board = document.getElementById("board");
+    board.innerHTML = "";
 
-    board.innerHTML="";
+    const { data: posts, error } = await sb
+        .from("posts")
+        .select("id, title, content, views, created_at, profiles(display_name)")
+        .order("created_at", { ascending: false });
 
-    const posts=getPosts();
+    if(error){
+        console.error(error);
+        return;
+    }
 
-    posts.forEach((p,index)=>{
+    (posts || []).forEach((p, index) => {
 
-        const titleRow=document.createElement("tr");
+        const tr = document.createElement("tr");
+        const dateStr = new Date(p.created_at).toLocaleDateString();
 
-        titleRow.innerHTML=`
-            <td>${posts.length-index}</td>
-
-            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold"
-                onclick="openPost(${p.id})">
-
-                ${p.title}
-
-            </td>
-
-            <td>김철수</td>
-
+        tr.innerHTML = `
+            <td>${posts.length - index}</td>
+            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold" onclick="openPost(${p.id})">${p.title}</td>
+            <td>${p.profiles?.display_name || "익명"}</td>
             <td>${p.views}</td>
-
-            <td>${p.date}</td>
+            <td>${dateStr}</td>
+            <td><button class="btn-danger" onclick="deletePost(${p.id})">삭제</button></td>
         `;
 
-        board.appendChild(titleRow);
-
+        board.appendChild(tr);
     });
-
 }
 
-function openPost(id){
+async function openPost(id){
 
-    let posts=getPosts();
+    const { data: post, error } = await sb.from("posts").select("*").eq("id", id).single();
+    if(error || !post) return;
 
-    const post=posts.find(p=>p.id===id);
-
-    post.views++;
-
-    localStorage.setItem("posts",JSON.stringify(posts));
+    await sb.from("posts").update({ views: post.views + 1 }).eq("id", id);
 
     alert(
 `제목 : ${post.title}
-
 --------------------------
-
 ${post.content}
-
 --------------------------
-
-작성일 : ${post.date}`
+작성일 : ${new Date(post.created_at).toLocaleDateString()}`
     );
 
-    loadBoard();
-
+    await loadBoard();
 }
 
-function deletePost(id){
-
-    let posts=getPosts().filter(p=>p.id!==id);
-
-    localStorage.setItem("posts",JSON.stringify(posts));
-
-    loadBoard();
-
-}
-function showScreen(screenId) {
-        // 모든 screen 클래스를 가진 요소에서 active 제거
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        // 선택한 screenId에만 active 추가
-        document.getElementById(screenId).classList.add('active');
+async function deletePost(id){
+    const { error } = await sb.from("posts").delete().eq("id", id);
+    if(error){
+        alert("삭제 실패(본인 글만 삭제할 수 있습니다): " + error.message);
+        return;
     }
+    await loadBoard();
+}
+
+/* ======================
+   🖥️ 화면 전환
+====================== */
+function showScreen(screenId){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+}
+
+/* ======================
+   🚀 시작
+====================== */
+window.onload = async () => {
+    const { data: { session } } = await sb.auth.getSession();
+
+    if(session){
+        await enterApp();
+    }else{
+        showScreen("auth-screen");
+    }
+};
 </script>
 </body>
 </html>
