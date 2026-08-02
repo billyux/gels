@@ -10,7 +10,19 @@ supabase db push --project-ref sqxvkpavtwpglneamntd
 ## Edge Function 배포
 ```
 supabase functions deploy ai-chat --project-ref sqxvkpavtwpglneamntd
+supabase functions deploy shelters --project-ref sqxvkpavtwpglneamntd
 ```
+
+### shelters 함수 (무더위쉼터 지도)
+국민재난안전포털(safekorea.go.kr)의 시설안전지도 페이지가 내부적으로 호출하는 공개
+엔드포인트(`facilityDataList.do`)를 그대로 프록시합니다. 로그인/인증키가 필요 없는 공개
+데이터라 별도 API 키 발급 없이 바로 씁니다. 기본값은 부산진구(`sggCd=26230`) — 다른 지역을
+보려면 국민안전24 지도 페이지에서 `/data/map/sgg/{시도코드}.json`으로 시군구 코드를 확인해서
+`shelters?sggCd=<코드>`로 호출하면 됩니다.
+
+이 API는 우리가 소유한 게 아니라 형식이 예고 없이 바뀔 수 있습니다 — 응답이 깨지면
+`facilityDataList.do` 요청 파라미터(tableNm, sggCd, size)와 응답 필드(la/lo가 위도/경도)를
+다시 확인하세요.
 
 ## 필수 secret
 Gemini API 키를 Edge Function에서 쓸 수 있도록 등록해야 합니다 (git에는 절대 커밋하지 않음).

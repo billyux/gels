@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>고령자 AI 케어 - 통합 대시보드</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     /* ----------------------------------
        디자인 테마 변수 설정 (이미지 기준)
@@ -390,6 +391,7 @@
          <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
         <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
        <a href="#" onclick="showScreen('notice-screen')">공지사항 및 자주 보는 게시판</a>
+        <a href="#" onclick="openShelterScreen()">🌡️ 무더위쉼터 지도</a>
         <a href="#" onclick="showScreen('settings-screen')">설정</a>
     </div>
 </nav>
@@ -521,6 +523,14 @@
     </div>
 
 </section>
+<section id="shelter-screen" class="screen" style="padding: 30px;">
+    <h2>🌡️ 부산진구 무더위쉼터 지도</h2>
+    <p id="shelterStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;"></p>
+    <div class="card" style="padding:10px;">
+        <div id="shelterMap" style="height:520px; border-radius:12px;"></div>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
 <section id="settings-screen" class="screen" style="padding: 30px;">
     <h2>⚙️ 설정</h2>
     <div class="card" style="max-width:400px;">
@@ -575,6 +585,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /* ======================
    🔌 Supabase 초기화
@@ -1003,6 +1014,65 @@ async function deletePost(id){
         return;
     }
     await loadBoard();
+}
+
+/* ======================
+   🌡️ 무더위쉼터 지도
+====================== */
+let shelterMap = null;
+let shelterMarkersLayer = null;
+
+async function openShelterScreen(){
+    showScreen("shelter-screen");
+
+    if(!shelterMap){
+        shelterMap = L.map("shelterMap").setView([35.162, 129.053], 14);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
+        }).addTo(shelterMap);
+
+        shelterMarkersLayer = L.layerGroup().addTo(shelterMap);
+    }
+
+    setTimeout(() => shelterMap.invalidateSize(), 100);
+
+    const statusEl = document.getElementById("shelterStatus");
+    statusEl.textContent = "불러오는 중...";
+
+    try{
+        const { data: { session } } = await sb.auth.getSession();
+
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/shelters?sggCd=26230`, {
+            headers: {
+                "Authorization": `Bearer ${session.access_token}`,
+                "apikey": SUPABASE_KEY
+            }
+        });
+        const data = await res.json();
+
+        if(data.error){
+            statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + data.error;
+            return;
+        }
+
+        shelterMarkersLayer.clearLayers();
+
+        data.shelters.forEach((s) => {
+            L.marker([s.lat, s.lng])
+                .bindPopup(
+                    `<strong>${s.name}</strong><br>${s.address}<br>` +
+                    `수용인원: ${s.capacity ?? "정보 없음"}명<br>` +
+                    `에어컨: ${s.aircon ? "있음" : "없음"}`
+                )
+                .addTo(shelterMarkersLayer);
+        });
+
+        statusEl.textContent = `부산진구 무더위쉼터 ${data.shelters.length}곳을 표시했습니다. 지도 위 점을 눌러보세요.`;
+    }catch(err){
+        statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + err.message;
+    }
 }
 
 /* ======================
