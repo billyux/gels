@@ -305,6 +305,73 @@
     border-radius:15px;
     padding:15px;
 }
+
+    /* 게시글 작성/읽기 모달 (메모장 스타일) */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.45);
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-box {
+        background: var(--card-bg);
+        border-radius: 15px;
+        padding: 25px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        box-sizing: border-box;
+    }
+
+    .modal-box h2 { margin-top: 0; }
+
+    .modal-box input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+    }
+
+    #writeContent {
+        width: 100%;
+        min-height: 220px;
+        padding: 10px;
+        box-sizing: border-box;
+        resize: vertical;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .read-content {
+        white-space: pre-wrap;
+        word-break: break-word;
+        line-height: 1.7;
+        font-size: 15px;
+        color: var(--text-main);
+    }
+
+    .read-image, .write-image-preview {
+        max-width: 100%;
+        border-radius: 10px;
+        margin: 10px 0;
+    }
 </style>
 </head>
 <body>
@@ -383,9 +450,7 @@
     <section class="card" style="margin-top:20px;">
         <h2>📝 커뮤니티 게시판</h2>
         <div style="margin-bottom:15px;">
-            <input id="title" placeholder="제목을 입력하세요" style="padding:10px; width:300px;">
-            <input id="content" placeholder="내용을 입력하세요" style="padding:10px; width:400px;">
-            <button onclick="writePost()" class="btn-custom">게시글 작성</button>
+            <button onclick="openWriteModal()" class="btn-custom">✏️ 게시글 작성</button>
         </div>
 
         <table class="post-table">
@@ -478,6 +543,37 @@
         </div>
     </div>
 </section>
+
+<div id="writeModal" class="modal-overlay" onclick="if(event.target===this) closeWriteModal()">
+    <div class="modal-box">
+        <h2>✏️ 새 게시글</h2>
+        <input id="writeTitle" type="text" placeholder="제목을 입력하세요">
+        <textarea id="writeContent" placeholder="내용을 입력하세요"></textarea>
+        <div style="margin-top:10px;">
+            <label style="font-size:13px; color:var(--text-sub);">이미지 첨부 (선택)</label><br>
+            <input id="writeImage" type="file" accept="image/*" style="margin-top:5px;" onchange="previewWriteImage()">
+            <img id="writeImagePreview" class="write-image-preview" style="display:none;">
+        </div>
+        <p id="writeError" style="color:#ff7676; font-size:13px; min-height:18px;"></p>
+        <div class="modal-actions">
+            <button onclick="closeWriteModal()" class="btn-danger" style="margin-bottom:0;">취소</button>
+            <button onclick="submitPost()" class="btn-custom">등록</button>
+        </div>
+    </div>
+</div>
+
+<div id="readModal" class="modal-overlay" onclick="if(event.target===this) closeReadModal()">
+    <div class="modal-box">
+        <h2 id="readTitle"></h2>
+        <p id="readMeta" style="color:var(--text-sub); font-size:13px;"></p>
+        <img id="readImage" class="read-image" style="display:none;">
+        <p id="readContent" class="read-content"></p>
+        <div class="modal-actions">
+            <button onclick="closeReadModal()" class="btn-custom">닫기</button>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
 /* ======================
@@ -768,31 +864,74 @@ async function ask(){
 }
 
 /* ======================
-   📝 게시판
+   📝 게시판 (작성/읽기 모달)
 ====================== */
-async function writePost(){
+function openWriteModal(){
+    document.getElementById("writeTitle").value = "";
+    document.getElementById("writeContent").value = "";
+    document.getElementById("writeImage").value = "";
+    document.getElementById("writeImagePreview").style.display = "none";
+    document.getElementById("writeError").textContent = "";
+    document.getElementById("writeModal").classList.add("active");
+}
 
-    const title = document.getElementById("title").value.trim();
-    const content = document.getElementById("content").value.trim();
+function closeWriteModal(){
+    document.getElementById("writeModal").classList.remove("active");
+}
+
+function previewWriteImage(){
+    const file = document.getElementById("writeImage").files[0];
+    const preview = document.getElementById("writeImagePreview");
+    if(!file){
+        preview.style.display = "none";
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+}
+
+async function submitPost(){
+
+    const title = document.getElementById("writeTitle").value.trim();
+    const content = document.getElementById("writeContent").value.trim();
+    const file = document.getElementById("writeImage").files[0];
+    const errEl = document.getElementById("writeError");
+    errEl.textContent = "";
 
     if(!title || !content){
-        alert("제목과 내용을 입력하세요.");
+        errEl.textContent = "제목과 내용을 입력하세요.";
         return;
     }
 
     const { data: { user } } = await sb.auth.getUser();
     if(!user) return;
 
-    const { error } = await sb.from("posts").insert({ user_id: user.id, title, content });
+    let image_url = null;
+
+    if(file){
+        const path = `${user.id}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await sb.storage.from("post-images").upload(path, file);
+
+        if(uploadError){
+            errEl.textContent = "이미지 업로드 실패: " + uploadError.message;
+            return;
+        }
+
+        image_url = sb.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+    }
+
+    const { error } = await sb.from("posts").insert({ user_id: user.id, title, content, image_url });
 
     if(error){
-        alert("게시글 작성 실패: " + error.message);
+        errEl.textContent = "게시글 작성 실패: " + error.message;
         return;
     }
 
-    document.getElementById("title").value = "";
-    document.getElementById("content").value = "";
-
+    closeWriteModal();
     await loadBoard();
 }
 
@@ -803,7 +942,7 @@ async function loadBoard(){
 
     const { data: posts, error } = await sb
         .from("posts")
-        .select("id, title, content, views, created_at, profiles(display_name)")
+        .select("id, title, content, image_url, views, created_at, profiles(display_name)")
         .order("created_at", { ascending: false });
 
     if(error){
@@ -818,7 +957,7 @@ async function loadBoard(){
 
         tr.innerHTML = `
             <td>${posts.length - index}</td>
-            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold" onclick="openPost(${p.id})">${p.title}</td>
+            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold" onclick="openPost(${p.id})">${p.title}${p.image_url ? " 🖼️" : ""}</td>
             <td>${p.profiles?.display_name || "익명"}</td>
             <td>${p.views}</td>
             <td>${dateStr}</td>
@@ -836,15 +975,25 @@ async function openPost(id){
 
     await sb.from("posts").update({ views: post.views + 1 }).eq("id", id);
 
-    alert(
-`제목 : ${post.title}
---------------------------
-${post.content}
---------------------------
-작성일 : ${new Date(post.created_at).toLocaleDateString()}`
-    );
+    document.getElementById("readTitle").textContent = post.title;
+    document.getElementById("readMeta").textContent = `작성일: ${new Date(post.created_at).toLocaleDateString()}`;
+    document.getElementById("readContent").textContent = post.content;
+
+    const readImage = document.getElementById("readImage");
+    if(post.image_url){
+        readImage.src = post.image_url;
+        readImage.style.display = "block";
+    }else{
+        readImage.style.display = "none";
+    }
+
+    document.getElementById("readModal").classList.add("active");
 
     await loadBoard();
+}
+
+function closeReadModal(){
+    document.getElementById("readModal").classList.remove("active");
 }
 
 async function deletePost(id){
