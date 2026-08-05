@@ -418,6 +418,7 @@
         <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
         <a href="#" onclick="openTempScreen()">🌡️ 온도 알림</a>
         <a href="#" onclick="openShelterScreen()">🗺️ 무더위쉼터 지도</a>
+        <a href="#" onclick="showScreen('fall-screen')">📹 낙상 방지 및 행동 분석</a>
        <a href="#" onclick="showScreen('notice-screen')">📱 디지털배움터</a>
         <a href="#" onclick="showScreen('settings-screen')">설정</a>
     </div>
@@ -595,6 +596,65 @@
         <div id="shelterMap" style="height:520px; border-radius:12px;"></div>
     </div>
     <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
+<section id="fall-screen" class="screen" style="padding: 30px;">
+    <h2>📹 낙상 방지 및 행동 분석</h2>
+    <p style="font-size:14px; margin-top:-10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:#fdecea; color:#c0392b; font-weight:700; font-size:12px;">
+            <span style="width:6px; height:6px; border-radius:50%; background:#c0392b;"></span>카메라 미연결
+        </span>
+        <span style="color:var(--text-sub);">ESP32 카메라를 연결하면 이 화면이 실시간으로 채워집니다.</span>
+    </p>
+
+    <div class="grid-container">
+        <section class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:280px;">
+            <svg width="90" height="130" viewBox="0 0 90 130" fill="none">
+                <circle cx="45" cy="18" r="12" stroke="var(--primary-color)" stroke-width="3"/>
+                <line x1="45" y1="30" x2="45" y2="75" stroke="var(--primary-color)" stroke-width="3"/>
+                <line x1="45" y1="42" x2="20" y2="60" stroke="var(--primary-color)" stroke-width="3"/>
+                <line x1="45" y1="42" x2="70" y2="60" stroke="var(--primary-color)" stroke-width="3"/>
+                <line x1="45" y1="75" x2="25" y2="115" stroke="var(--primary-color)" stroke-width="3"/>
+                <line x1="45" y1="75" x2="65" y2="115" stroke="var(--primary-color)" stroke-width="3"/>
+                <circle cx="45" cy="42" r="3.5" fill="var(--accent-color)"/>
+                <circle cx="20" cy="60" r="3.5" fill="var(--accent-color)"/>
+                <circle cx="70" cy="60" r="3.5" fill="var(--accent-color)"/>
+                <circle cx="45" cy="75" r="3.5" fill="var(--accent-color)"/>
+                <circle cx="25" cy="115" r="3.5" fill="var(--accent-color)"/>
+                <circle cx="65" cy="115" r="3.5" fill="var(--accent-color)"/>
+            </svg>
+            <p style="color:var(--text-sub); font-size:13px; text-align:center; margin:0;">카메라가 연결되면<br>여기에 실시간 영상과 자세 분석이 표시됩니다.</p>
+            <button class="btn-custom" disabled style="opacity:0.5; cursor:not-allowed;">📷 카메라 연결하기 (준비 중)</button>
+        </section>
+
+        <section class="card">
+            <h2 style="font-size:16px;">예정된 기능</h2>
+            <div style="display:flex; flex-direction:column; gap:16px;">
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="font-size:20px;">🚨</span>
+                    <div>
+                        <strong style="font-size:14px;">낙상 감지</strong>
+                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">자세가 갑자기 무너지면 바로 보호자에게 알림을 보내요.</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="font-size:20px;">⏱️</span>
+                    <div>
+                        <strong style="font-size:14px;">장시간 미동 감지</strong>
+                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">오랫동안 움직임이 없으면 낙상 의심으로 확인해요.</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:12px; align-items:flex-start;">
+                    <span style="font-size:20px;">📊</span>
+                    <div>
+                        <strong style="font-size:14px;">활동량 리포트</strong>
+                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">하루 활동량과 방 이동 빈도를 매일 저녁 요약해드려요.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:20px;">뒤로가기</button>
 </section>
 <section id="settings-screen" class="screen" style="padding: 30px;">
     <h2>⚙️ 설정</h2>
