@@ -289,6 +289,23 @@
         border-radius: 10px 10px 10px 0;
     }
 
+    .thinking-dot {
+        display: inline-block;
+        width: 7px; height: 7px;
+        margin: 0 2px;
+        border-radius: 50%;
+        background: var(--text-sub);
+        animation: thinking-bounce 1.2s infinite ease-in-out;
+    }
+
+    .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes thinking-bounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40% { transform: translateY(-5px); opacity: 1; }
+    }
+
     /* 게시판 테이블 스타일 */
     .post-table {
         width: 100%;
@@ -956,12 +973,37 @@ function showLoading(){
 
     const div = document.createElement("div");
     div.className = "ai";
-    div.innerText = "🤔 AI가 생각 중...";
+    div.innerHTML = '<span class="thinking-dot"></span><span class="thinking-dot"></span><span class="thinking-dot"></span>';
 
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
 
     return div;
+}
+
+// AI 답변을 한 글자씩 타이핑하듯 보여줌
+function typeAiMessage(text){
+    return new Promise((resolve) => {
+        const chat = document.getElementById("chat");
+
+        const div = document.createElement("div");
+        div.className = "ai";
+        chat.appendChild(div);
+
+        let i = 0;
+
+        const timer = setInterval(() => {
+            i += 2;
+            div.textContent = text.slice(0, i);
+            chat.scrollTop = chat.scrollHeight;
+
+            if(i >= text.length){
+                clearInterval(timer);
+                div.textContent = text;
+                resolve();
+            }
+        }, 25);
+    });
 }
 
 function clearChat(){
@@ -993,8 +1035,8 @@ async function ask(){
             return;
         }
 
-        add("ai", data.answer);
         speak(data.answer);
+        await typeAiMessage(data.answer);
     }catch(err){
         loading.remove();
         add("ai", "❌ 오류: " + err.message);
