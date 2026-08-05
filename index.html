@@ -65,8 +65,12 @@
     .avatar {
         width: 40px; height: 40px;
         border-radius: 50%;
-        background: #ddd;
+        background: #fdf8f0;
+        overflow: hidden;
+        flex: none;
     }
+
+    .avatar svg { display: block; width: 100%; height: 100%; }
 
     .menu-list a {
         display: block;
@@ -422,7 +426,31 @@
 <nav class="sidebar">
     <div class="logo">💙 AI 케어 시스템</div>
     <div class="profile-short">
-        <div class="avatar"></div>
+        <div class="avatar">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="50" fill="#fdf8f0"/>
+                <path d="M20 90 Q50 72 80 90 L80 101 L20 101 Z" fill="#90a97a"/>
+                <path d="M40 79 L50 91 L60 79 Z" fill="#c89c87"/>
+                <circle cx="50" cy="48" r="34" fill="#ffffff"/>
+                <circle cx="28" cy="26" r="10" fill="#ffffff"/>
+                <circle cx="42" cy="18" r="11" fill="#ffffff"/>
+                <circle cx="58" cy="18" r="11" fill="#ffffff"/>
+                <circle cx="72" cy="26" r="10" fill="#ffffff"/>
+                <g>
+                    <ellipse cx="70" cy="21" rx="4.5" ry="6" fill="#f6b8c4"/>
+                    <ellipse cx="76" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(72 76 25)"/>
+                    <ellipse cx="74" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(144 74 33)"/>
+                    <ellipse cx="66" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(216 66 33)"/>
+                    <ellipse cx="64" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(288 64 25)"/>
+                    <circle cx="70" cy="28" r="4" fill="#f7d774"/>
+                </g>
+                <ellipse cx="40" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
+                <ellipse cx="60" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
+                <ellipse cx="30" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
+                <ellipse cx="70" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
+                <path d="M45 60 Q50 65 55 60" stroke="#3a2e26" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+        </div>
         <div>
             <strong id="sidebarName">-</strong>
             <div style="font-size:12px; color:var(--text-sub);">노인회원</div>
@@ -447,7 +475,31 @@
         <h1 class="page-title">사용자 통합 대시보드</h1>
         <div class="top-profile">
             <button class="app-check-btn">출석 확인! App Check!</button>
-            <div class="avatar"></div>
+            <div class="avatar">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="50" fill="#fdf8f0"/>
+                <path d="M20 90 Q50 72 80 90 L80 101 L20 101 Z" fill="#90a97a"/>
+                <path d="M40 79 L50 91 L60 79 Z" fill="#c89c87"/>
+                <circle cx="50" cy="48" r="34" fill="#ffffff"/>
+                <circle cx="28" cy="26" r="10" fill="#ffffff"/>
+                <circle cx="42" cy="18" r="11" fill="#ffffff"/>
+                <circle cx="58" cy="18" r="11" fill="#ffffff"/>
+                <circle cx="72" cy="26" r="10" fill="#ffffff"/>
+                <g>
+                    <ellipse cx="70" cy="21" rx="4.5" ry="6" fill="#f6b8c4"/>
+                    <ellipse cx="76" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(72 76 25)"/>
+                    <ellipse cx="74" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(144 74 33)"/>
+                    <ellipse cx="66" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(216 66 33)"/>
+                    <ellipse cx="64" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(288 64 25)"/>
+                    <circle cx="70" cy="28" r="4" fill="#f7d774"/>
+                </g>
+                <ellipse cx="40" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
+                <ellipse cx="60" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
+                <ellipse cx="30" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
+                <ellipse cx="70" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
+                <path d="M45 60 Q50 65 55 60" stroke="#3a2e26" stroke-width="2" fill="none" stroke-linecap="round"/>
+            </svg>
+        </div>
             <span id="topProfileName">안녕하세요, 회원님</span>
         </div>
     </header>
