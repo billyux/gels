@@ -509,6 +509,7 @@
             <h2>📅 출석체크</h2>
             <button onclick="attend()" class="btn-custom">출석하기</button>
             <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
+            <img id="attMascot" src="assets/mascot/fighting.png" alt="모아리" style="display:none; width:90px; margin-top:8px;">
 
             <table class="calendar-table">
                 <thead>
@@ -572,9 +573,12 @@
 </main>
 <section id="notice-screen" class="screen" style="padding: 30px;">
     <h2>📱 디지털배움터</h2>
-    <div class="card">
-         <a href="#" onclick="showScreen('abc')">키오스크</a>
-       <a href="#" onclick="showScreen('def')">카카오택시</a>
+    <div class="card" style="display:flex; align-items:center; gap:20px;">
+        <img src="assets/mascot/reading.png" alt="모아리" style="width:90px; flex:none;">
+        <div>
+             <a href="#" onclick="showScreen('abc')">키오스크</a>
+           <a href="#" onclick="showScreen('def')">카카오택시</a>
+        </div>
     </div>
     <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
 </section>
@@ -625,6 +629,7 @@
     <p id="tempStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;">불러오는 중...</p>
 
     <div class="card" style="max-width:420px; display:flex; align-items:center; gap:24px;">
+        <img src="assets/mascot/tea.png" alt="모아리" style="width:90px; flex:none;">
         <div>
             <div style="font-size:13px; color:var(--text-sub);">부산진구 현재 기온</div>
             <div id="tempReading" style="font-size:46px; font-weight:700; color:var(--accent-color); line-height:1;">--°C</div>
@@ -642,7 +647,10 @@
         <div id="waterCupDots" style="display:flex; gap:6px; margin-bottom:16px;"></div>
 
         <button onclick="drinkWater()" class="btn-custom">물 한 잔 마셨어요 👍</button>
-        <p id="waterConfirmMsg" style="font-size:13px; color:var(--primary-color); margin-top:10px; min-height:18px;"></p>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+            <img id="waterMascot" src="assets/mascot/thanks.png" alt="모아리" style="display:none; width:70px;">
+            <p id="waterConfirmMsg" style="font-size:13px; color:var(--primary-color); margin:0; min-height:18px;"></p>
+        </div>
     </div>
 
     <div class="card" style="max-width:420px; margin-top:20px;">
@@ -735,7 +743,8 @@
 </section>
 <section id="auth-screen" class="screen active" style="padding: 60px 20px;">
     <div class="card" style="max-width:380px; margin:0 auto;">
-        <h2>💙 로그인 / 회원가입</h2>
+        <img src="assets/mascot/hero-wave.png" alt="모아리" style="display:block; width:110px; margin:0 auto 10px;">
+        <h2 style="text-align:center;">로그인 / 회원가입</h2>
         <p style="color:var(--text-sub); font-size:14px; margin-top:-10px;">고령자 AI 케어에 오신 것을 환영합니다.</p>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
             <input id="authName" placeholder="이름 (회원가입 시에만 입력)" style="padding:10px;">
@@ -960,6 +969,7 @@ async function attend(){
     }
 
     document.getElementById("attText").innerText = "오늘 출석 완료 👍";
+    document.getElementById("attMascot").style.display = "block";
 
     await createCalendar(); // 다시 그려서 반영
 }
@@ -1337,6 +1347,7 @@ async function drinkWater(){
     }
 
     msgEl.textContent = "오늘 물 마신 걸 기록했어요 👍";
+    document.getElementById("waterMascot").style.display = "block";
     await loadWaterToday();
     await loadWaterCalendar();
 }
