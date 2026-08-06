@@ -470,9 +470,9 @@
     </div>
     <div class="menu-list">
         <a href="#" onclick="showScreen('dashboard-screen')">대시보드</a>
-          <a href="#" onclick="showScreen('dashboard-screen')">출석체크</a>
-         <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
-        <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
+          <a href="#" onclick="openAttendanceScreen()">출석체크</a>
+         <a href="#" onclick="showScreen('ai-chat-screen')">AI 상담 도우미</a>
+        <a href="#" onclick="openBoardScreen()">커뮤니티 게시판</a>
         <a href="#" onclick="openTempScreen()">🌡️ 온도 알림</a>
         <a href="#" onclick="openShelterScreen()">🗺️ 무더위쉼터 지도</a>
         <a href="#" onclick="showScreen('fall-screen')">📹 낙상 방지 및 행동 분석</a>
@@ -516,56 +516,65 @@
         </div>
     </header>
 
-    <div class="grid-container">
-        <section class="card">
-            <h2>출석체크</h2>
-            <div style="display:flex; align-items:center; gap:16px;">
-                <img src="assets/mascot/attendance-pose.png" alt="모아리" style="height:160px; flex:none;">
-                <button onclick="attend()" class="btn-custom">출석하기</button>
-            </div>
-            <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
-            <img id="attMascot" src="assets/mascot/fighting.png" alt="모아리" style="display:none; width:90px; margin-top:8px;">
-
-            <table class="calendar-table">
-                <thead>
-                    <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
-                </thead>
-                <tbody id="calendarBody">
-                    <tr>
-                        <td></td><td></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
-                    </tr>
-                    <tr>
-                        <td>6</td><td>7</td><td>8</td><td class="checked today">9</td><td class="checked">10</td><td>11</td><td>12</td>
-                    </tr>
-                    <tr>
-                        <td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td>
-                    </tr>
-                    <tr>
-                        <td colspan="7" style="color:var(--text-sub); font-size:12px; padding-top:15px;">* 예시 화면입니다.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
-        <section class="card">
-            <h2>AI 상담</h2>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="assets/mascot/consult-pose.png" alt="모아리" style="height:140px;">
-                    <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
-                </div>
-                <button onclick="clearChat()" class="btn-danger">대화 내용 삭제</button>
-            </div>
-            <div id="chat" class="chat"></div>
-            <textarea id="input" placeholder="궁금한 점을 물어보세요..." rows="2"></textarea>
-            <div style="text-align:right;">
-                <button onclick="voiceInput()" class="btn-custom" style="background:var(--accent-color);">🎤 음성 입력</button>
-                <button onclick="ask()" class="btn-custom">전송</button>
-            </div>
-        </section>
+    <div class="card" style="text-align:center; color:var(--text-sub); padding:60px 25px;">
+        왼쪽 메뉴에서 원하는 기능을 선택하세요.
     </div>
 
-    <section class="card" style="margin-top:20px;">
+</main>
+<section id="attendance-screen" class="screen" style="padding: 30px;">
+    <h2 style="font-size:28px;">출석체크</h2>
+    <div class="card">
+        <div style="display:flex; align-items:center; gap:16px;">
+            <img src="assets/mascot/attendance-pose.png" alt="모아리" style="height:160px; flex:none;">
+            <button onclick="attend()" class="btn-custom">출석하기</button>
+        </div>
+        <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
+        <img id="attMascot" src="assets/mascot/fighting.png" alt="모아리" style="display:none; width:90px; margin-top:8px;">
+
+        <table class="calendar-table">
+            <thead>
+                <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
+            </thead>
+            <tbody id="calendarBody">
+                <tr>
+                    <td></td><td></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
+                </tr>
+                <tr>
+                    <td>6</td><td>7</td><td>8</td><td class="checked today">9</td><td class="checked">10</td><td>11</td><td>12</td>
+                </tr>
+                <tr>
+                    <td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td>
+                </tr>
+                <tr>
+                    <td colspan="7" style="color:var(--text-sub); font-size:12px; padding-top:15px;">* 예시 화면입니다.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
+<section id="ai-chat-screen" class="screen" style="padding: 30px;">
+    <h2 style="font-size:28px;">AI 상담</h2>
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <img src="assets/mascot/consult-pose.png" alt="모아리" style="height:140px;">
+                <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
+            </div>
+            <button onclick="clearChat()" class="btn-danger">대화 내용 삭제</button>
+        </div>
+        <div id="chat" class="chat"></div>
+        <textarea id="input" placeholder="궁금한 점을 물어보세요..." rows="2"></textarea>
+        <div style="text-align:right;">
+            <button onclick="voiceInput()" class="btn-custom" style="background:var(--accent-color);">🎤 음성 입력</button>
+            <button onclick="ask()" class="btn-custom">전송</button>
+        </div>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
+<section id="board-screen" class="screen" style="padding: 30px;">
+    <h2 style="font-size:28px;">커뮤니티 게시판</h2>
+    <div class="card">
         <div style="display:flex; align-items:center; gap:14px;">
             <img src="assets/mascot/board-pose.png" alt="모아리" style="height:160px;">
             <h2 style="margin:0;">커뮤니티 게시판</h2>
@@ -588,10 +597,9 @@
             <tbody id="board">
                 </tbody>
         </table>
-    </section>
-
-
-</main>
+    </div>
+    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
+</section>
 <section id="notice-screen" class="screen" style="padding: 30px;">
     <h2>📱 디지털배움터</h2>
     <div class="card" style="display:flex; align-items:center; gap:20px;">
@@ -919,8 +927,16 @@ async function enterApp(){
 
     document.body.classList.add("authed");
     showScreen("dashboard-screen");
+}
 
+/* 출석체크 / 게시판은 이제 각자 화면이라, 그 화면에 들어갈 때 데이터를 불러옴 */
+async function openAttendanceScreen(){
+    showScreen("attendance-screen");
     await createCalendar();
+}
+
+async function openBoardScreen(){
+    showScreen("board-screen");
     await loadBoard();
 }
 
