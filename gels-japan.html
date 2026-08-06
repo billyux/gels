@@ -60,9 +60,10 @@
     body.authed .sidebar { display: flex; }
 
     .logo {
-        font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
-        font-size: 30px;
-        font-weight: bold;
+        font-family: 'Playfair Display', var(--font-family);
+        font-style: italic;
+        font-size: 26px;
+        font-weight: 600;
         color: var(--primary-color);
         margin-bottom: 40px;
     }
@@ -116,9 +117,10 @@
     }
 
     .page-title {
-        font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
-        font-size: 40px;
-        font-weight: 700;
+        font-family: 'Playfair Display', var(--font-family);
+        font-style: italic;
+        font-size: 30px;
+        font-weight: 600;
     }
 
     .top-profile {
@@ -160,18 +162,22 @@
 
     /* ----------------------------------
        대시보드 브랜드 소개 섹션 (룩북 스타일)
-       실제 사진은 .placeholder-img 를 <img src="..."> 로 교체하면 됩니다.
     ---------------------------------- */
+    .brand-section {
+        max-width: 860px;
+        margin: 0 auto;
+    }
+
     .brand-hero {
         position: relative;
         border-radius: 18px;
         overflow: hidden;
-        margin-bottom: 40px;
+        margin-bottom: 32px;
     }
 
-    .brand-hero .placeholder-img {
-        aspect-ratio: 16 / 9;
-        border-radius: 18px;
+    .brand-hero .brand-photo {
+        aspect-ratio: 3 / 1;
+        object-position: center 30%;
     }
 
     .brand-hero-overlay {
@@ -180,89 +186,99 @@
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        padding: 40px;
+        padding: 26px 30px;
         box-sizing: border-box;
-        background: linear-gradient(180deg, rgba(51,51,51,0) 40%, rgba(40,34,26,0.55) 100%);
+        background: linear-gradient(180deg, rgba(51,51,51,0) 45%, rgba(40,34,26,0.6) 100%);
         color: #fff;
         text-align: center;
         align-items: center;
     }
 
     .brand-eyebrow {
-        font-size: 13px;
+        font-size: 11px;
         letter-spacing: 3px;
         text-transform: uppercase;
         opacity: 0.9;
-        margin: 0 0 12px;
+        margin: 0 0 8px;
     }
 
     .brand-title {
         font-family: 'Playfair Display', serif;
         font-style: italic;
         font-weight: 500;
-        font-size: 52px;
+        font-size: 34px;
         line-height: 1.15;
-        margin: 0 0 14px;
+        margin: 0 0 8px;
         text-wrap: balance;
     }
 
     .brand-sub {
-        font-size: 15px;
+        font-size: 13px;
         opacity: 0.95;
         margin: 0;
-        max-width: 480px;
+        max-width: 440px;
     }
 
     .brand-intro {
-        max-width: 640px;
-        margin: 0 auto 44px;
+        max-width: 560px;
+        margin: 0 auto 32px;
         text-align: center;
     }
 
     .brand-intro-mark {
         font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
         color: var(--primary-color);
-        font-size: 22px;
-        margin-bottom: 10px;
+        font-size: 18px;
+        margin-bottom: 8px;
     }
 
     .brand-intro h3 {
         font-family: 'Playfair Display', serif;
         font-style: italic;
-        font-size: 26px;
+        font-size: 22px;
         font-weight: 500;
         color: var(--text-main);
-        margin: 0 0 18px;
+        margin: 0 0 14px;
     }
 
     .brand-intro p {
-        font-size: 14.5px;
-        line-height: 1.8;
+        font-size: 13.5px;
+        line-height: 1.75;
         color: var(--text-sub);
-        margin: 0 0 12px;
+        margin: 0 0 10px;
     }
 
     .brand-grid {
         display: grid;
         grid-template-columns: 1.4fr 1fr;
-        gap: 16px;
+        gap: 12px;
         margin-bottom: 10px;
     }
 
     .brand-grid-side {
         display: grid;
         grid-template-rows: 1fr 1fr;
-        gap: 16px;
+        gap: 12px;
     }
 
-    .brand-grid .placeholder-img { border-radius: 14px; }
-    .brand-grid-main .placeholder-img { aspect-ratio: 3 / 4; height: 100%; }
-    .brand-grid-side .placeholder-img { aspect-ratio: 16 / 10; }
+    .brand-photo-frame {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .brand-grid-main .brand-photo-frame { aspect-ratio: 4 / 5; height: 100%; }
+    .brand-grid-side .brand-photo-frame { aspect-ratio: 16 / 10; }
+
+    .brand-photo {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
 
     @media (max-width: 720px) {
-        .brand-title { font-size: 34px; }
-        .brand-hero-overlay { padding: 24px; }
-        .brand-hero .placeholder-img { aspect-ratio: 4 / 5; }
+        .brand-title { font-size: 26px; }
+        .brand-hero-overlay { padding: 18px; }
+        .brand-hero .brand-photo { aspect-ratio: 4 / 5; }
         .brand-grid { grid-template-columns: 1fr; }
     }
 
@@ -646,11 +662,9 @@
         </div>
     </header>
 
-    <!-- 히어로 이미지: 세로/가로 인물 사진 1장. placeholder-img를 <img class="placeholder-img" src="assets/brand/hero.jpg"> 로 교체 -->
-    <!-- 히어로 자리표시자: 실제 사진 넣을 때는 위 span은 지우고
-         <div class="placeholder-img"> 를 <img class="placeholder-img" src="..."> 로 바꾸세요 (가로 1600×900px 권장, 인물 상반신) -->
+    <div class="brand-section">
     <div class="brand-hero">
-        <div class="placeholder-img"></div>
+        <img class="brand-photo" src="assets/brand/hero.png" alt="모아리와 함께">
         <div class="brand-hero-overlay">
             <p class="brand-eyebrow">고령자 AI 케어 · 2026</p>
             <h2 class="brand-title">Warm<br>Everyday</h2>
@@ -666,21 +680,21 @@
         <p>왼쪽 메뉴에서 오늘 필요한 기능을 선택해보세요.</p>
     </div>
 
-    <!-- 사진 그리드: 이미지 3장 (큰 이미지 1 + 작은 이미지 2). 각 placeholder-img를 <img>로 교체 -->
     <div class="brand-grid">
         <div class="brand-grid-main">
-            <div class="placeholder-img">
-                <span class="placeholder-label">이미지 1<br><small>(세로 1200×1600px)</small></span>
+            <div class="brand-photo-frame">
+                <img class="brand-photo" src="assets/brand/hug.png" alt="모아리를 안고 있는 모습">
             </div>
         </div>
         <div class="brand-grid-side">
-            <div class="placeholder-img">
-                <span class="placeholder-label">이미지 2</span>
+            <div class="brand-photo-frame">
+                <img class="brand-photo" src="assets/brand/collage.png" alt="모아리 다양한 포즈 모음">
             </div>
-            <div class="placeholder-img">
-                <span class="placeholder-label">이미지 3</span>
+            <div class="brand-photo-frame">
+                <img class="brand-photo" src="assets/brand/outdoor.png" alt="모아리와 야외에서">
             </div>
         </div>
+    </div>
     </div>
 
 </main>
