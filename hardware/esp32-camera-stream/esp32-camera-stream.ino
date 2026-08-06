@@ -1,6 +1,6 @@
 /*
-  ESP32-S3 카메라 MJPEG 스트리밍 서버
-  ------------------------------------
+  ESP32-S3 카메라 MJPEG 스트리밍 서버 (Seeed Studio XIAO ESP32S3 Sense 기준)
+  ------------------------------------------------------------------------
   고령자 AI 케어 프로젝트 — 행동 분석용 영상을 같은 네트워크의
   라즈베리파이로 전송하기 위한 펌웨어입니다.
 
@@ -11,12 +11,12 @@
   Espressif의 공식 CameraWebServer 예제와 동일한 구조(esp_http_server 기반)로
   작성했지만, 실제 동작 확인은 직접 해주셔야 합니다.
 
-  필요한 것:
-  - Arduino IDE에 "esp32" 보드 패키지 설치 (Espressif 제공, esp32-camera 포함)
-  - 보드 설정: ESP32S3 Dev Module (또는 사용 중인 정확한 보드명)
-  - 아래 WIFI_SSID / WIFI_PASSWORD 를 실제 값으로 변경
-  - 카메라 핀맵은 보드마다 달라서, 사용 중인 보드가 Freenove ESP32-S3-WROOM CAM이
-    아니라면 아래 핀 번호를 보드 데이터시트에 맞게 반드시 수정해야 합니다.
+  Arduino IDE 설정 (XIAO ESP32S3 Sense 기준):
+  - 보드 매니저에서 "esp32" (Espressif) 설치
+  - Tools > Board: "XIAO_ESP32S3"
+  - Tools > PSRAM: "OPI PSRAM" (반드시 켜야 함 — 안 켜면 카메라 초기화 실패)
+  - 아래 WIFI_SSID / WIFI_PASSWORD 를 실제 값(라즈베리파이와 같은 네트워크)으로 변경
+  - 카메라 보드 자체를 XIAO 본체에 꽂아야 함 (Sense 확장보드에 카메라 모듈 연결)
 */
 
 #include "esp_camera.h"
@@ -28,22 +28,23 @@ const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 // ================================================
 
-// Freenove ESP32-S3-WROOM CAM 핀맵 기준 (다른 보드면 데이터시트 보고 수정)
+// Seeed Studio XIAO ESP32S3 Sense 카메라 핀맵
+// (다른 보드로 바꾸면 이 부분을 그 보드의 camera_pins.h 값으로 교체해야 함)
 #define PWDN_GPIO_NUM     -1
 #define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM     15
-#define SIOD_GPIO_NUM     4
-#define SIOC_GPIO_NUM     5
-#define Y9_GPIO_NUM       16
-#define Y8_GPIO_NUM       17
-#define Y7_GPIO_NUM       18
-#define Y6_GPIO_NUM       12
-#define Y5_GPIO_NUM       10
-#define Y4_GPIO_NUM       8
-#define Y3_GPIO_NUM       9
-#define Y2_GPIO_NUM       11
-#define VSYNC_GPIO_NUM    6
-#define HREF_GPIO_NUM     7
+#define XCLK_GPIO_NUM     10
+#define SIOD_GPIO_NUM     40
+#define SIOC_GPIO_NUM     39
+#define Y9_GPIO_NUM       48
+#define Y8_GPIO_NUM       11
+#define Y7_GPIO_NUM       12
+#define Y6_GPIO_NUM       14
+#define Y5_GPIO_NUM       16
+#define Y4_GPIO_NUM       18
+#define Y3_GPIO_NUM       17
+#define Y2_GPIO_NUM       15
+#define VSYNC_GPIO_NUM    38
+#define HREF_GPIO_NUM     47
 #define PCLK_GPIO_NUM     13
 
 httpd_handle_t cameraServer = NULL;
@@ -129,9 +130,22 @@ void startCamera(){
     config.pin_reset    = RESET_GPIO_NUM;
     config.xclk_freq_hz = 20000000;
     config.pixel_format = PIXFORMAT_JPEG;
-    config.frame_size   = FRAMESIZE_VGA; // 640x480 — 라즈베리파이 자세 분석에 적당한 크기
-    config.jpeg_quality = 12;
-    config.fb_count      = 2;
+
+    // XIAO ESP32S3 Sense는 PSRAM(OPI PSRAM 옵션)을 켜야 카메라가 동작함.
+    // 혹시 꺼져있는 상태로 올리면 여기서 자동으로 더 작은 해상도로 낮춰서
+    // 최소한 동작은 하도록 안전장치를 둠 (권장: PSRAM 켜고 VGA로 사용).
+    if(psramFound()){
+        config.frame_size   = FRAMESIZE_VGA; // 640x480 — 라즈베리파이 자세 분석에 적당한 크기
+        config.jpeg_quality = 12;
+        config.fb_count     = 2;
+        config.fb_location  = CAMERA_FB_IN_PSRAM;
+    }else{
+        Serial.println("⚠ PSRAM이 감지되지 않았어요. Tools > PSRAM을 OPI PSRAM으로 켜주세요.");
+        config.frame_size   = FRAMESIZE_QVGA; // 320x240로 축소해서 DRAM만으로 동작 시도
+        config.jpeg_quality = 15;
+        config.fb_count     = 1;
+        config.fb_location  = CAMERA_FB_IN_DRAM;
+    }
 
     esp_err_t err = esp_camera_init(&config);
     if(err != ESP_OK){
