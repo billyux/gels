@@ -731,8 +731,12 @@
             </div>
 
             <div id="deviceView" style="display:none; flex-direction:column; align-items:center; gap:12px; width:100%;">
-                <video id="deviceVideo" autoplay playsinline muted style="width:100%; max-width:360px; border-radius:12px; background:#000;"></video>
+                <div style="position:relative; width:100%; max-width:360px;">
+                    <video id="deviceVideo" autoplay playsinline muted style="display:block; width:100%; border-radius:12px; background:#000;"></video>
+                    <canvas id="poseCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+                </div>
                 <p id="deviceCamMsg" style="font-size:13px; color:var(--text-sub); text-align:center; margin:0;"></p>
+                <p id="fallAlert" style="display:none; font-size:13px; font-weight:700; color:#c0392b; background:#fdecea; padding:6px 12px; border-radius:999px; margin:0;">🚨 낙상 의심 — 자세가 갑자기 낮아졌어요</p>
                 <button id="stopCamBtn" onclick="stopDeviceCamera()" class="btn-danger" style="display:none; margin-bottom:0;">카메라 끄기</button>
             </div>
         </section>
@@ -743,8 +747,8 @@
                 <div style="display:flex; gap:12px; align-items:flex-start;">
                     <span style="font-size:20px;">🚨</span>
                     <div>
-                        <strong style="font-size:14px;">낙상 감지</strong>
-                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">자세가 갑자기 무너지면 바로 보호자에게 알림을 보내요.</p>
+                        <strong style="font-size:14px;">낙상 감지 <span style="font-size:11px; font-weight:normal; color:var(--primary-color); background:#e9f5e1; padding:1px 8px; border-radius:999px;">기기 카메라로 실험 중</span></strong>
+                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">골반 높이가 갑자기 낮아지면 화면에 낙상 의심 표시를 해요 (아직 참고용 — 보호자 알림 발송은 준비 중).</p>
                     </div>
                 </div>
                 <div style="display:flex; gap:12px; align-items:flex-start;">
@@ -824,6 +828,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 <script>
 /* ======================
    🔌 Supabase 초기화
@@ -1513,6 +1519,143 @@ async function openShelterScreen(){
    📹 낙상 방지 - 카메라 소스 선택
 ====================== */
 let deviceStream = null;
+let poseDetector = null;
+let poseRafId = null;
+let hipHistory = []; // { t, y } — 엉덩이(골반) 높이 기록, 낙상 의심 판단용
+let fallAlertShownAt = 0;
+
+/* 자세 추정 모델은 한 번만 불러와서 재사용 */
+async function loadPoseModel(){
+    if(poseDetector) return poseDetector;
+
+    const msg = document.getElementById("deviceCamMsg");
+    msg.textContent = "AI 자세 분석 모델을 불러오는 중...";
+
+    await tf.setBackend("webgl");
+    await tf.ready();
+
+    poseDetector = await poseDetection.createDetector(
+        poseDetection.SupportedModels.MoveNet,
+        { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
+    );
+
+    return poseDetector;
+}
+
+function startPoseDetection(video){
+    hipHistory = [];
+    fallAlertShownAt = 0;
+
+    const canvas = document.getElementById("poseCanvas");
+    const ctx = canvas.getContext("2d");
+
+    async function loop(){
+        if(!deviceStream) return; // 카메라가 꺼졌으면 루프 종료
+
+        canvas.width = video.clientWidth;
+        canvas.height = video.clientHeight;
+
+        try{
+            const poses = await poseDetector.estimatePoses(video);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if(poses[0]){
+                drawPose(ctx, poses[0], video, canvas);
+                checkFall(poses[0], canvas.height);
+            }
+        }catch(e){
+            // 프레임 하나 실패한 건 무시하고 다음 프레임 계속 시도
+        }
+
+        poseRafId = requestAnimationFrame(loop);
+    }
+
+    poseRafId = requestAnimationFrame(loop);
+}
+
+function drawPose(ctx, pose, video, canvas){
+    const scaleX = canvas.width / video.videoWidth;
+    const scaleY = canvas.height / video.videoHeight;
+
+    const pairs = [
+        ["left_shoulder","right_shoulder"], ["left_shoulder","left_hip"], ["right_shoulder","right_hip"],
+        ["left_hip","right_hip"], ["left_shoulder","left_elbow"], ["left_elbow","left_wrist"],
+        ["right_shoulder","right_elbow"], ["right_elbow","right_wrist"], ["left_hip","left_knee"],
+        ["left_knee","left_ankle"], ["right_hip","right_knee"], ["right_knee","right_ankle"]
+    ];
+
+    const byName = {};
+    pose.keypoints.forEach(kp => byName[kp.name] = kp);
+
+    ctx.strokeStyle = "#90a97a";
+    ctx.lineWidth = 3;
+    pairs.forEach(([a, b]) => {
+        const ka = byName[a], kb = byName[b];
+        if(ka && kb && ka.score > 0.3 && kb.score > 0.3){
+            ctx.beginPath();
+            ctx.moveTo(ka.x * scaleX, ka.y * scaleY);
+            ctx.lineTo(kb.x * scaleX, kb.y * scaleY);
+            ctx.stroke();
+        }
+    });
+
+    pose.keypoints.forEach(kp => {
+        if(kp.score > 0.3){
+            ctx.beginPath();
+            ctx.arc(kp.x * scaleX, kp.y * scaleY, 4, 0, 2 * Math.PI);
+            ctx.fillStyle = "#c89c87";
+            ctx.fill();
+        }
+    });
+}
+
+/* 아주 단순한 낙상 의심 판단: 골반 높이가 짧은 시간 안에 화면 세로 길이의
+   25% 이상 급격히 내려가서 그 상태로 유지되면 "낙상 의심"으로 표시.
+   정밀한 판정이 아니라 참고용 알림임을 프론트에도 명시하고 있음. */
+function checkFall(pose, canvasHeight){
+    const byName = {};
+    pose.keypoints.forEach(kp => byName[kp.name] = kp);
+    const lHip = byName["left_hip"], rHip = byName["right_hip"];
+    if(!lHip || !rHip || lHip.score < 0.3 || rHip.score < 0.3) return;
+
+    const hipY = (lHip.y + rHip.y) / 2;
+    const now = performance.now();
+
+    hipHistory.push({ t: now, y: hipY });
+    hipHistory = hipHistory.filter(h => now - h.t < 3000); // 최근 3초만 유지
+
+    if(hipHistory.length < 2) return;
+
+    const oldest = hipHistory[0];
+    const drop = hipY - oldest.y; // 값이 커질수록(아래로) 내려간 것
+    const droppedFast = drop > canvasHeight * 0.22 && (now - oldest.t) < 1500;
+
+    const fallAlert = document.getElementById("fallAlert");
+
+    if(droppedFast){
+        fallAlert.style.display = "inline-block";
+        fallAlertShownAt = now;
+    }else if(fallAlertShownAt && now - fallAlertShownAt > 4000){
+        fallAlert.style.display = "none";
+        fallAlertShownAt = 0;
+    }
+}
+
+function stopPoseDetection(){
+    if(poseRafId){
+        cancelAnimationFrame(poseRafId);
+        poseRafId = null;
+    }
+    hipHistory = [];
+    fallAlertShownAt = 0;
+    const canvas = document.getElementById("poseCanvas");
+    if(canvas){
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    const fallAlert = document.getElementById("fallAlert");
+    if(fallAlert) fallAlert.style.display = "none";
+}
 
 function setCameraStatus(connected, text){
     const badge = document.getElementById("cameraStatusBadge");
@@ -1583,9 +1726,21 @@ async function startDeviceCamera(){
         }
 
         deviceStream = stream;
+
+        // srcObject를 넣기 전에 먼저 리스너를 걸어야 함 — 순서가 바뀌면
+        // 메타데이터가 이미 로드되어 이벤트를 놓칠 수 있음 (특히 빠른 환경에서)
+        video.onloadedmetadata = async () => {
+            try{
+                await loadPoseModel();
+                msg.textContent = "";
+                startPoseDetection(video);
+            }catch(e){
+                msg.textContent = "자세 분석 모델을 불러오지 못했어요 (영상만 표시됩니다): " + (e.message || e);
+            }
+        };
+
         video.srcObject = stream;
         stopBtn.style.display = "inline-block";
-        msg.textContent = "";
         setCameraStatus(true, "이 기기 카메라로 실시간 영상을 보고 있어요.");
     }catch(err){
         msg.textContent = "카메라를 사용할 수 없어요: " + (err.message || err.name || err);
@@ -1594,6 +1749,8 @@ async function startDeviceCamera(){
 }
 
 function stopDeviceCamera(){
+    stopPoseDetection();
+
     if(deviceStream){
         deviceStream.getTracks().forEach(t => t.stop());
         deviceStream = null;
