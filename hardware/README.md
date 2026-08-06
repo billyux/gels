@@ -13,18 +13,22 @@
   --활동량/자세 계산(1분 단위)--> [Supabase activity_samples 테이블] --> [웹 대시보드]
 ```
 
-## 1) ESP32-S3: `esp32-camera-stream/esp32-camera-stream.ino`
+## 1) ESP32-S3 (Seeed Studio XIAO ESP32S3 Sense): `esp32-camera-stream/esp32-camera-stream.ino`
 
 1. Arduino IDE에 ESP32 보드 패키지 설치 (파일 > 환경설정 > 추가 보드 매니저 URL에
    `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json` 추가 후,
    보드 매니저에서 "esp32" 설치)
-2. 보드 종류를 실제 사용 중인 ESP32-S3 카메라 보드로 선택
-3. 스케치 상단의 `WIFI_SSID`, `WIFI_PASSWORD`를 실제 값으로 수정
-4. **카메라 핀맵 확인 필수**: 코드에는 Freenove ESP32-S3-WROOM CAM 기준 핀맵이
-   들어있습니다. 다른 보드(AI-Thinker, ESP-EYE 등)를 쓰신다면 핀 번호가
-   다르므로 보드 데이터시트를 보고 `#define ..._GPIO_NUM` 부분을 수정해야 합니다.
-5. 업로드 후 시리얼 모니터(115200bps)에서 출력되는 IP 주소를 확인하세요.
+2. **Tools > Board**: "XIAO_ESP32S3" 선택
+3. **Tools > PSRAM**: 반드시 **"OPI PSRAM"으로 켜기** — 안 켜면 카메라 초기화가
+   실패합니다 (Seeed 공식 문서에서도 필수라고 안내함)
+4. 스케치 상단의 `WIFI_SSID`, `WIFI_PASSWORD`를 실제 값(라즈베리파이와 같은
+   네트워크/핫스팟)으로 수정
+5. 카메라 모듈이 XIAO 본체의 커넥터에 정확히 꽂혀있는지 확인 (Sense 확장보드에
+   카메라 리본 케이블 연결)
+6. 업로드 후 시리얼 모니터(115200bps)에서 출력되는 IP 주소를 확인하세요.
    예: `카메라 스트림 주소: http://192.168.0.50/stream`
+   - "PSRAM이 감지되지 않았어요" 로그가 뜨면 3번의 PSRAM 설정이 안 된 것이니
+     다시 확인해주세요 (그래도 일단 더 낮은 해상도로 동작은 시도합니다)
 
 ## 2) 라즈베리파이: `raspberrypi-activity-logger/activity_logger.py`
 
