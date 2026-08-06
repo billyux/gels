@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>고령자 AI 케어 - 통합 대시보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/HakgyoansimTteokbokkiB/Hakgyoansim_TteokbokkiB.css" type="text/css" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
@@ -153,6 +156,133 @@
         margin-top: 0;
         margin-bottom: 20px;
         color: var(--text-main);
+    }
+
+    /* ----------------------------------
+       대시보드 브랜드 소개 섹션 (룩북 스타일)
+       실제 사진은 .placeholder-img 를 <img src="..."> 로 교체하면 됩니다.
+    ---------------------------------- */
+    .brand-hero {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        margin-bottom: 40px;
+    }
+
+    .brand-hero .placeholder-img {
+        aspect-ratio: 16 / 9;
+        border-radius: 18px;
+    }
+
+    .brand-hero-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 40px;
+        box-sizing: border-box;
+        background: linear-gradient(180deg, rgba(51,51,51,0) 40%, rgba(40,34,26,0.55) 100%);
+        color: #fff;
+        text-align: center;
+        align-items: center;
+    }
+
+    .brand-eyebrow {
+        font-size: 13px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        opacity: 0.9;
+        margin: 0 0 12px;
+    }
+
+    .brand-title {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        font-weight: 500;
+        font-size: 52px;
+        line-height: 1.15;
+        margin: 0 0 14px;
+        text-wrap: balance;
+    }
+
+    .brand-sub {
+        font-size: 15px;
+        opacity: 0.95;
+        margin: 0;
+        max-width: 480px;
+    }
+
+    .brand-intro {
+        max-width: 640px;
+        margin: 0 auto 44px;
+        text-align: center;
+    }
+
+    .brand-intro-mark {
+        font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
+        color: var(--primary-color);
+        font-size: 22px;
+        margin-bottom: 10px;
+    }
+
+    .brand-intro h3 {
+        font-family: 'Playfair Display', serif;
+        font-style: italic;
+        font-size: 26px;
+        font-weight: 500;
+        color: var(--text-main);
+        margin: 0 0 18px;
+    }
+
+    .brand-intro p {
+        font-size: 14.5px;
+        line-height: 1.8;
+        color: var(--text-sub);
+        margin: 0 0 12px;
+    }
+
+    .brand-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 16px;
+        margin-bottom: 10px;
+    }
+
+    .brand-grid-side {
+        display: grid;
+        grid-template-rows: 1fr 1fr;
+        gap: 16px;
+    }
+
+    .brand-grid .placeholder-img { border-radius: 14px; }
+    .brand-grid-main .placeholder-img { aspect-ratio: 3 / 4; height: 100%; }
+    .brand-grid-side .placeholder-img { aspect-ratio: 16 / 10; }
+
+    @media (max-width: 720px) {
+        .brand-title { font-size: 34px; }
+        .brand-hero-overlay { padding: 24px; }
+        .brand-hero .placeholder-img { aspect-ratio: 4 / 5; }
+        .brand-grid { grid-template-columns: 1fr; }
+    }
+
+    .placeholder-img {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+        background: linear-gradient(135deg, #eef1e8 0%, #f4e9e2 100%);
+        border: 1.5px dashed #c3b6a0;
+    }
+
+    .placeholder-label {
+        font-size: 13px;
+        color: #9a8b76;
+        text-align: center;
+        line-height: 1.6;
+        padding: 12px;
     }
 
     /* ----------------------------------
@@ -516,8 +646,41 @@
         </div>
     </header>
 
-    <div class="card" style="text-align:center; color:var(--text-sub); padding:60px 25px;">
-        왼쪽 메뉴에서 원하는 기능을 선택하세요.
+    <!-- 히어로 이미지: 세로/가로 인물 사진 1장. placeholder-img를 <img class="placeholder-img" src="assets/brand/hero.jpg"> 로 교체 -->
+    <!-- 히어로 자리표시자: 실제 사진 넣을 때는 위 span은 지우고
+         <div class="placeholder-img"> 를 <img class="placeholder-img" src="..."> 로 바꾸세요 (가로 1600×900px 권장, 인물 상반신) -->
+    <div class="brand-hero">
+        <div class="placeholder-img"></div>
+        <div class="brand-hero-overlay">
+            <p class="brand-eyebrow">고령자 AI 케어 · 2026</p>
+            <h2 class="brand-title">Warm<br>Everyday</h2>
+            <p class="brand-sub">일상에 다정함을 더하는 스마트 돌봄, 모아리와 함께하는 새로운 대시보드를 소개합니다.</p>
+        </div>
+    </div>
+
+    <!-- 브랜드 소개 문구 -->
+    <div class="brand-intro">
+        <div class="brand-intro-mark">모아리</div>
+        <h3>사람을 향한 기술</h3>
+        <p>고령자 AI 케어는 어르신의 하루를 세심하게 살피는 스마트 돌봄 서비스입니다. 출석체크로 안부를 확인하고, AI 상담 도우미가 말벗이 되어드리며, 이웃과 소식을 나누는 커뮤니티까지 — 곁에서 챙기는 마음을 담았습니다.</p>
+        <p>왼쪽 메뉴에서 오늘 필요한 기능을 선택해보세요.</p>
+    </div>
+
+    <!-- 사진 그리드: 이미지 3장 (큰 이미지 1 + 작은 이미지 2). 각 placeholder-img를 <img>로 교체 -->
+    <div class="brand-grid">
+        <div class="brand-grid-main">
+            <div class="placeholder-img">
+                <span class="placeholder-label">이미지 1<br><small>(세로 1200×1600px)</small></span>
+            </div>
+        </div>
+        <div class="brand-grid-side">
+            <div class="placeholder-img">
+                <span class="placeholder-label">이미지 2</span>
+            </div>
+            <div class="placeholder-img">
+                <span class="placeholder-label">이미지 3</span>
+            </div>
+        </div>
     </div>
 
 </main>
