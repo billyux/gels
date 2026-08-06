@@ -1554,6 +1554,11 @@ function selectCameraSource(source){
 }
 
 async function startDeviceCamera(){
+    // 이미 켜져있는 스트림이 있다면 새로 요청하기 전에 반드시 먼저 끄기
+    // (안 그러면 이전 스트림이 그대로 남아서 "카메라 끄기"를 눌러도
+    //  최근 스트림만 꺼지고 카메라 표시등은 계속 켜져있게 됨)
+    stopDeviceCamera();
+
     const video = document.getElementById("deviceVideo");
     const msg = document.getElementById("deviceCamMsg");
     const stopBtn = document.getElementById("stopCamBtn");
