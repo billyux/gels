@@ -471,6 +471,8 @@
 
 <main id="dashboard-screen" class="screen">
 
+    <img src="assets/mascot/peek.png" alt="모아리" style="display:block; width:110px; margin:0 auto -20px;">
+
     <header>
         <h1 class="page-title">사용자 통합 대시보드</h1>
         <div class="top-profile">
@@ -507,7 +509,10 @@
     <div class="grid-container">
         <section class="card">
             <h2>📅 출석체크</h2>
-            <button onclick="attend()" class="btn-custom">출석하기</button>
+            <div style="display:flex; align-items:center; gap:16px;">
+                <img src="assets/mascot/attendance-pose.png" alt="모아리" style="width:80px; flex:none;">
+                <button onclick="attend()" class="btn-custom">출석하기</button>
+            </div>
             <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
             <img id="attMascot" src="assets/mascot/fighting.png" alt="모아리" style="display:none; width:90px; margin-top:8px;">
 
@@ -535,7 +540,10 @@
         <section class="card">
             <h2>🤖 AI 상담</h2>
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="assets/mascot/consult-pose.png" alt="모아리" style="width:60px;">
+                    <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
+                </div>
                 <button onclick="clearChat()" class="btn-danger">대화 내용 삭제</button>
             </div>
             <div id="chat" class="chat"></div>
@@ -548,8 +556,11 @@
     </div>
 
     <section class="card" style="margin-top:20px;">
-        <h2>📝 커뮤니티 게시판</h2>
-        <div style="margin-bottom:15px;">
+        <div style="display:flex; align-items:center; gap:14px;">
+            <img src="assets/mascot/board-pose.png" alt="모아리" style="width:70px;">
+            <h2 style="margin:0;">📝 커뮤니티 게시판</h2>
+        </div>
+        <div style="margin:15px 0;">
             <button onclick="openWriteModal()" class="btn-custom">✏️ 게시글 작성</button>
         </div>
 
