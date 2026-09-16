@@ -2,13 +2,16 @@
   "name": "gels-server",
   "version": "1.0.0",
   "private": true,
-  "description": "gels 고령자 AI 케어 - Supabase를 대체하는 자체 SQLite 백엔드",
+  "description": "gels 고령자 AI 케어 - Supabase를 대체하는 자체 백엔드 (Turso/SQLite)",
   "main": "server.js",
   "scripts": {
-    "start": "node --experimental-sqlite server.js",
-    "seed": "node --experimental-sqlite seed.js"
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
