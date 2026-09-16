@@ -10,7 +10,7 @@
 
 ```
 [ESP32-S3 카메라] --MJPEG 스트림(HTTP)--> [라즈베리파이] --MediaPipe Pose 분석-->
-  --활동량/자세 계산(1분 단위)--> [Supabase activity_samples 테이블] --> [웹 대시보드]
+  --활동량/자세 계산(1분 단위)--> [gels 백엔드 서버(server/) activity_samples 테이블] --> [웹 대시보드]
 ```
 
 ## 1) ESP32-S3 (Seeed Studio XIAO ESP32S3 Sense): `esp32-camera-stream/esp32-camera-stream.ino`
@@ -37,8 +37,7 @@ cd hardware/raspberrypi-activity-logger
 pip install -r requirements.txt
 
 export ESP32_STREAM_URL=http://192.168.0.50/stream   # 1번에서 확인한 주소
-export SUPABASE_URL=https://sqxvkpavtwpglneamntd.supabase.co
-export SUPABASE_ANON_KEY=sb_publishable_nEam_xtX_VDlCBgABD4-4g_LTiVBK8i
+export API_BASE_URL=http://192.168.0.10:3000/api      # gels 백엔드 서버(server/) 주소
 export DEVICE_USERNAME=billy       # 대시보드 로그인 아이디
 export DEVICE_PASSWORD=본인비밀번호
 
@@ -50,8 +49,8 @@ python activity_logger.py
 - 비밀번호를 코드에 직접 적지 말고 항상 환경변수로 넘겨주세요 (터미널 기록에도
   남지 않게 하려면 `.env` 파일 + `python-dotenv` 사용을 추천).
 - 1분마다 그 사이의 평균 움직임량(`activity_level`)과 마지막으로 판별된 자세
-  (`posture`: standing/sitting/lying)를 Supabase `activity_samples` 테이블에
-  기록합니다.
+  (`posture`: standing/sitting/lying)를 gels 백엔드 서버의 `activity_samples`
+  테이블에 기록합니다.
 - MediaPipe Pose를 라즈베리파이 CPU만으로 돌리기 때문에 모델 성능(`model_complexity=0`,
   가장 가벼운 모델)을 낮춰뒀습니다. 라즈베리파이 사양에 따라 프레임 처리 속도가
   느릴 수 있어요 — 실제로 돌려보고 너무 느리면 ESP32 쪽 해상도(`FRAMESIZE_VGA`)를
@@ -60,7 +59,7 @@ python activity_logger.py
 ## 3) 확인 방법
 
 - 라즈베리파이 실행 로그에 `기록: activity_level=..., posture=...` 가 1분마다 찍히면 정상
-- Supabase 대시보드(테이블 편집기)에서 `activity_samples` 테이블에 실시간으로 행이
+- `server/data/gels.db`(SQLite)의 `activity_samples` 테이블에 실시간으로 행이
   쌓이는지 확인
 - 이 데이터가 최소 1주일 정도 쌓이면, 웹 대시보드 쪽에 "시간대별 평소 활동량
   기준선 계산 + 이상 감지 알림" 기능을 이어서 붙일 수 있습니다 (다음 단계).

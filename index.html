@@ -825,30 +825,53 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 <script>
 /* ======================
-   🔌 Supabase 초기화
+   🔌 백엔드 API 초기화
 ====================== */
-const SUPABASE_URL = "https://sqxvkpavtwpglneamntd.supabase.co";
-const SUPABASE_KEY = "sb_publishable_nEam_xtX_VDlCBgABD4-4g_LTiVBK8i";
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const API_BASE = "https://saturn-skills-improve-butter.trycloudflare.com/api";
+const API_ORIGIN = API_BASE.replace(/\/api$/, "");
+const AUTH_TOKEN_KEY = "gels_token";
+
+function resolveImageUrl(url){
+    if(!url) return url;
+    return url.startsWith("/") ? `${API_ORIGIN}${url}` : url;
+}
+
+function getToken(){
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+function setToken(token){
+    if(token) localStorage.setItem(AUTH_TOKEN_KEY, token);
+    else localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+// path, { method, body, isForm } -> body는 JSON 객체(기본) 또는 FormData(isForm:true)
+async function apiFetch(path, { method = "GET", body, isForm = false } = {}){
+    const headers = {};
+    const token = getToken();
+    if(token) headers["Authorization"] = `Bearer ${token}`;
+    if(body && !isForm) headers["Content-Type"] = "application/json";
+
+    const res = await fetch(`${API_BASE}${path}`, {
+        method,
+        headers,
+        body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error(data.error || `요청 실패 (${res.status})`);
+    return data;
+}
 
 /* ======================
    🔐 로그인 / 회원가입
 ====================== */
-// Supabase Auth는 아이디 개념이 없어서, 입력받은 아이디를
-// 내부적으로 "아이디@gels.local" 형식의 이메일로 변환해 사용합니다.
-// (실제 메일은 절대 발송되지 않고, 이메일 인증도 꺼둔 상태)
-function usernameToEmail(raw){
-    const cleaned = raw.trim().toLowerCase().replace(/[^a-z0-9._-]/g, "");
-    return cleaned + "@gels.local";
-}
-
 async function signUp(){
     const name = document.getElementById("authName").value.trim();
     const username = document.getElementById("authUsername").value.trim();
@@ -862,18 +885,14 @@ async function signUp(){
         return;
     }
 
-    const { error } = await sb.auth.signUp({
-        email: usernameToEmail(username), password,
-        options: { data: { display_name: name, username } }
-    });
-
-    if(error){
+    try{
+        const { token } = await apiFetch("/auth/signup", { method: "POST", body: { name, username, password } });
+        setToken(token);
+        // 가입과 동시에 로그인 세션이 발급되므로, 따로 로그인 버튼을 누를 필요 없이 바로 입장
+        await enterApp();
+    }catch(error){
         errEl.textContent = error.message;
-        return;
     }
-
-    // 가입과 동시에 로그인 세션이 발급되므로, 따로 로그인 버튼을 누를 필요 없이 바로 입장
-    await enterApp();
 }
 
 async function signIn(){
@@ -883,39 +902,34 @@ async function signIn(){
     errEl.style.color = "#ff7676";
     errEl.textContent = "";
 
-    const { error } = await sb.auth.signInWithPassword({ email: usernameToEmail(username), password });
-    if(error){
+    try{
+        const { token } = await apiFetch("/auth/signin", { method: "POST", body: { username, password } });
+        setToken(token);
+        await enterApp();
+    }catch(error){
         errEl.textContent = error.message;
-        return;
     }
-
-    await enterApp();
 }
 
 async function logout(){
-    await sb.auth.signOut();
+    setToken(null);
     document.body.classList.remove("authed");
     showScreen("auth-screen");
 }
 
 async function enterApp(){
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user){
+    let user;
+    try{
+        ({ user } = await apiFetch("/me"));
+    }catch{
         showScreen("auth-screen");
         return;
     }
 
-    const { data: profile } = await sb
-        .from("profiles")
-        .select("display_name")
-        .eq("id", user.id)
-        .single();
-
-    const username = user.user_metadata?.username || user.email.split("@")[0];
-    const name = profile?.display_name || username;
+    const name = user.display_name || user.username;
     document.getElementById("sidebarName").textContent = name;
     document.getElementById("topProfileName").textContent = `안녕하세요, ${name}님`;
-    document.getElementById("settingsUsername").textContent = `로그인 아이디: ${username}`;
+    document.getElementById("settingsUsername").textContent = `로그인 아이디: ${user.username}`;
 
     document.body.classList.add("authed");
     showScreen("dashboard-screen");
@@ -945,13 +959,12 @@ async function createCalendar(){
     const monthStart = `${year}-${pad(month + 1)}-01`;
     const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
 
-    const { data: rows, error } = await sb
-        .from("attendance")
-        .select("attended_on")
-        .gte("attended_on", monthStart)
-        .lte("attended_on", monthEnd);
-
-    if(error) console.error(error);
+    let rows = [];
+    try{
+        ({ rows } = await apiFetch(`/attendance?start=${monthStart}&end=${monthEnd}`));
+    }catch(error){
+        console.error(error);
+    }
 
     const checkedDays = new Set((rows || []).map(r => Number(r.attended_on.split("-")[2])));
 
@@ -992,18 +1005,13 @@ async function createCalendar(){
 ====================== */
 async function attend(){
 
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
-
     const now = new Date();
     const pad = (n) => String(n).padStart(2, "0");
     const attendedOn = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
-    const { error } = await sb
-        .from("attendance")
-        .upsert({ user_id: user.id, attended_on: attendedOn }, { onConflict: "user_id,attended_on" });
-
-    if(error){
+    try{
+        await apiFetch("/attendance", { method: "POST", body: { attended_on: attendedOn } });
+    }catch(error){
         document.getElementById("attText").innerText = "출석 처리 중 오류: " + error.message;
         return;
     }
@@ -1124,18 +1132,9 @@ async function ask(){
     const loading = showLoading();
 
     try{
-        // Gemini 호출은 Supabase Edge Function을 통해 서버 사이드에서 처리합니다 (API 키 비노출)
-        const { data, error } = await sb.functions.invoke("ai-chat", { body: { text } });
+        // Gemini 호출은 백엔드 서버를 통해 처리합니다 (API 키 비노출)
+        const data = await apiFetch("/ai-chat", { method: "POST", body: { text } });
         loading.remove();
-
-        if(error){
-            add("ai", "❌ 오류: " + error.message);
-            return;
-        }
-        if(data.error){
-            add("ai", "❌ " + data.error);
-            return;
-        }
 
         speak(data.answer);
         await typeAiMessage(data.answer);
@@ -1189,26 +1188,14 @@ async function submitPost(){
         return;
     }
 
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
+    const form = new FormData();
+    form.append("title", title);
+    form.append("content", content);
+    if(file) form.append("image", file);
 
-    let image_url = null;
-
-    if(file){
-        const path = `${user.id}/${Date.now()}_${file.name}`;
-        const { error: uploadError } = await sb.storage.from("post-images").upload(path, file);
-
-        if(uploadError){
-            errEl.textContent = "이미지 업로드 실패: " + uploadError.message;
-            return;
-        }
-
-        image_url = sb.storage.from("post-images").getPublicUrl(path).data.publicUrl;
-    }
-
-    const { error } = await sb.from("posts").insert({ user_id: user.id, title, content, image_url });
-
-    if(error){
+    try{
+        await apiFetch("/posts", { method: "POST", body: form, isForm: true });
+    }catch(error){
         errEl.textContent = "게시글 작성 실패: " + error.message;
         return;
     }
@@ -1222,12 +1209,10 @@ async function loadBoard(){
     const board = document.getElementById("board");
     board.innerHTML = "";
 
-    const { data: posts, error } = await sb
-        .from("posts")
-        .select("id, title, content, image_url, views, created_at, profiles(display_name)")
-        .order("created_at", { ascending: false });
-
-    if(error){
+    let posts;
+    try{
+        ({ posts } = await apiFetch("/posts"));
+    }catch(error){
         console.error(error);
         return;
     }
@@ -1240,7 +1225,7 @@ async function loadBoard(){
         tr.innerHTML = `
             <td>${posts.length - index}</td>
             <td style="cursor:pointer;color:#2b6cb0;font-weight:bold" onclick="openPost(${p.id})">${p.title}${p.image_url ? " 🖼️" : ""}</td>
-            <td>${p.profiles?.display_name || "익명"}</td>
+            <td>${p.display_name || "익명"}</td>
             <td>${p.views}</td>
             <td>${dateStr}</td>
             <td><button class="btn-danger" onclick="deletePost(${p.id})">삭제</button></td>
@@ -1252,10 +1237,13 @@ async function loadBoard(){
 
 async function openPost(id){
 
-    const { data: post, error } = await sb.from("posts").select("*").eq("id", id).single();
-    if(error || !post) return;
-
-    await sb.from("posts").update({ views: post.views + 1 }).eq("id", id);
+    let post;
+    try{
+        ({ post } = await apiFetch(`/posts/${id}`));
+    }catch(error){
+        console.error(error);
+        return;
+    }
 
     document.getElementById("readTitle").textContent = post.title;
     document.getElementById("readMeta").textContent = `작성일: ${new Date(post.created_at).toLocaleDateString()}`;
@@ -1263,7 +1251,7 @@ async function openPost(id){
 
     const readImage = document.getElementById("readImage");
     if(post.image_url){
-        readImage.src = post.image_url;
+        readImage.src = resolveImageUrl(post.image_url);
         readImage.style.display = "block";
     }else{
         readImage.style.display = "none";
@@ -1279,8 +1267,9 @@ function closeReadModal(){
 }
 
 async function deletePost(id){
-    const { error } = await sb.from("posts").delete().eq("id", id);
-    if(error){
+    try{
+        await apiFetch(`/posts/${id}`, { method: "DELETE" });
+    }catch(error){
         alert("삭제 실패(본인 글만 삭제할 수 있습니다): " + error.message);
         return;
     }
@@ -1360,28 +1349,24 @@ function renderCupDots(cups){
 }
 
 async function loadWaterToday(){
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
+    let cups = 0;
+    try{
+        ({ cups } = await apiFetch("/water-log/today"));
+    }catch(error){
+        console.error(error);
+    }
 
-    const { data } = await sb
-        .from("water_log")
-        .select("cups")
-        .eq("user_id", user.id)
-        .eq("logged_on", todayStr())
-        .maybeSingle();
-
-    const cups = data?.cups || 0;
     document.getElementById("waterTodayCount").textContent = `${cups} / ${WATER_GOAL}잔`;
     renderCupDots(cups);
 }
 
 async function drinkWater(){
-    // DB에서 원자적으로 +1 처리 (읽고-다시-쓰는 방식은 빠르게 연속 클릭할 때 카운트가 씹힐 수 있음)
-    const { error } = await sb.rpc("increment_water", { p_date: todayStr() });
-
     const msgEl = document.getElementById("waterConfirmMsg");
 
-    if(error){
+    // DB에서 원자적으로 +1 처리 (읽고-다시-쓰는 방식은 빠르게 연속 클릭할 때 카운트가 씹힐 수 있음)
+    try{
+        await apiFetch("/water-log/increment", { method: "POST", body: { logged_on: todayStr() } });
+    }catch(error){
         msgEl.textContent = "기록 실패: " + error.message;
         return;
     }
@@ -1393,9 +1378,6 @@ async function drinkWater(){
 }
 
 async function loadWaterCalendar(){
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) return;
-
     const body = document.getElementById("waterCalendarBody");
     body.innerHTML = "";
 
@@ -1412,12 +1394,12 @@ async function loadWaterCalendar(){
     const monthStart = `${year}-${pad(month + 1)}-01`;
     const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
 
-    const { data: rows } = await sb
-        .from("water_log")
-        .select("logged_on, cups")
-        .eq("user_id", user.id)
-        .gte("logged_on", monthStart)
-        .lte("logged_on", monthEnd);
+    let rows = [];
+    try{
+        ({ rows } = await apiFetch(`/water-log?start=${monthStart}&end=${monthEnd}`));
+    }catch(error){
+        console.error(error);
+    }
 
     const cupsByDay = {};
     (rows || []).forEach((r) => {
@@ -1478,16 +1460,8 @@ async function openShelterScreen(){
     statusEl.textContent = "불러오는 중...";
 
     try{
-        const { data: { session } } = await sb.auth.getSession();
-
         // sggCd=26 → 부산광역시 전체 (구/군별로 보려면 예: 26230=부산진구)
-        const res = await fetch(`${SUPABASE_URL}/functions/v1/shelters?sggCd=26`, {
-            headers: {
-                "Authorization": `Bearer ${session.access_token}`,
-                "apikey": SUPABASE_KEY
-            }
-        });
-        const data = await res.json();
+        const data = await apiFetch("/shelters?sggCd=26");
 
         if(data.error){
             statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + data.error;
@@ -1776,9 +1750,7 @@ function showScreen(screenId){
    🚀 시작
 ====================== */
 window.onload = async () => {
-    const { data: { session } } = await sb.auth.getSession();
-
-    if(session){
+    if(getToken()){
         await enterApp();
     }else{
         showScreen("auth-screen");

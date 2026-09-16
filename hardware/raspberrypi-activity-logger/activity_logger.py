@@ -2,7 +2,8 @@
 라즈베리파이 - 행동 패턴 수집기
 --------------------------------
 고령자 AI 케어 프로젝트: ESP32 카메라의 영상을 받아서 MediaPipe Pose로
-자세를 분석하고, 일정 주기로 "활동량"을 계산해 Supabase에 기록합니다.
+자세를 분석하고, 일정 주기로 "활동량"을 계산해 gels 백엔드 서버(server/)에
+기록합니다.
 
 이 데이터가 1주일 정도 쌓이면(웹 대시보드 쪽에서) 시간대별 평소 활동
 패턴의 기준선을 만들고, 그 기준에서 벗어나는 시간대를 감지하는 데
@@ -18,15 +19,13 @@
 
 환경변수로 설정(커밋되는 코드에 직접 값을 넣지 마세요):
     ESP32_STREAM_URL   예: http://192.168.0.50/stream
-    SUPABASE_URL        예: https://sqxvkpavtwpglneamntd.supabase.co
-    SUPABASE_ANON_KEY   Supabase 프로젝트의 publishable/anon key
+    API_BASE_URL        gels 백엔드 서버 주소, 예: http://192.168.0.10:3000/api
     DEVICE_USERNAME     대시보드에 로그인할 때 쓰는 아이디 (예: billy)
     DEVICE_PASSWORD     그 계정의 비밀번호
 
 실행:
     export ESP32_STREAM_URL=http://192.168.0.50/stream
-    export SUPABASE_URL=https://sqxvkpavtwpglneamntd.supabase.co
-    export SUPABASE_ANON_KEY=sb_publishable_...
+    export API_BASE_URL=http://192.168.0.10:3000/api
     export DEVICE_USERNAME=billy
     export DEVICE_PASSWORD=billy##1108
     python activity_logger.py
@@ -42,17 +41,15 @@ import requests
 import mediapipe as mp
 
 ESP32_STREAM_URL = os.environ.get("ESP32_STREAM_URL")
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_ANON_KEY = os.environ.get("SUPABASE_ANON_KEY")
+API_BASE_URL = os.environ.get("API_BASE_URL")
 DEVICE_USERNAME = os.environ.get("DEVICE_USERNAME")
 DEVICE_PASSWORD = os.environ.get("DEVICE_PASSWORD")
 
-SAMPLE_INTERVAL_SEC = 60  # 이 주기마다 활동량을 계산해서 Supabase에 기록
+SAMPLE_INTERVAL_SEC = 60  # 이 주기마다 활동량을 계산해서 서버에 기록
 
 REQUIRED_ENV = {
     "ESP32_STREAM_URL": ESP32_STREAM_URL,
-    "SUPABASE_URL": SUPABASE_URL,
-    "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
+    "API_BASE_URL": API_BASE_URL,
     "DEVICE_USERNAME": DEVICE_USERNAME,
     "DEVICE_PASSWORD": DEVICE_PASSWORD,
 }
@@ -65,55 +62,34 @@ def check_env():
         sys.exit(1)
 
 
-def username_to_email(username: str) -> str:
-    # 웹 프론트엔드(index.html)의 usernameToEmail()과 반드시 동일한 규칙이어야
-    # 같은 계정으로 인식됩니다.
-    cleaned = "".join(ch for ch in username.strip().lower() if ch.isalnum() or ch in "._-")
-    return f"{cleaned}@gels.local"
-
-
 def sign_in():
-    """아이디/비밀번호로 로그인해서 access_token, refresh_token을 받아옵니다."""
+    """아이디/비밀번호로 로그인해서 JWT access_token을 받아옵니다."""
     resp = requests.post(
-        f"{SUPABASE_URL}/auth/v1/token?grant_type=password",
-        headers={"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"},
-        json={"email": username_to_email(DEVICE_USERNAME), "password": DEVICE_PASSWORD},
+        f"{API_BASE_URL}/auth/signin",
+        headers={"Content-Type": "application/json"},
+        json={"username": DEVICE_USERNAME, "password": DEVICE_PASSWORD},
         timeout=10,
     )
     resp.raise_for_status()
     data = resp.json()
-    return data["access_token"], data["refresh_token"], data["user"]["id"]
+    return data["token"]
 
 
-def refresh_session(refresh_token):
+def insert_sample(access_token, activity_level, posture):
     resp = requests.post(
-        f"{SUPABASE_URL}/auth/v1/token?grant_type=refresh_token",
-        headers={"apikey": SUPABASE_ANON_KEY, "Content-Type": "application/json"},
-        json={"refresh_token": refresh_token},
-        timeout=10,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    return data["access_token"], data["refresh_token"]
-
-
-def insert_sample(access_token, user_id, activity_level, posture):
-    resp = requests.post(
-        f"{SUPABASE_URL}/rest/v1/activity_samples",
+        f"{API_BASE_URL}/activity-samples",
         headers={
-            "apikey": SUPABASE_ANON_KEY,
             "Authorization": f"Bearer {access_token}",
             "Content-Type": "application/json",
         },
         json={
-            "user_id": user_id,
             "activity_level": activity_level,
             "posture": posture,
         },
         timeout=10,
     )
     if resp.status_code >= 300:
-        print(f"Supabase 기록 실패 ({resp.status_code}): {resp.text}")
+        print(f"서버 기록 실패 ({resp.status_code}): {resp.text}")
 
 
 # MediaPipe Pose의 랜드마크 인덱스 (공식 문서 기준)
@@ -154,9 +130,9 @@ def landmark_movement(prev, curr):
 def main():
     check_env()
 
-    print("Supabase 로그인 중...")
-    access_token, refresh_token, user_id = sign_in()
-    print(f"로그인 완료 (user_id={user_id})")
+    print("서버 로그인 중...")
+    access_token = sign_in()
+    print("로그인 완료")
 
     print(f"ESP32 스트림 여는 중: {ESP32_STREAM_URL}")
     cap = cv2.VideoCapture(ESP32_STREAM_URL)
@@ -198,15 +174,15 @@ def main():
 
             now = time.time()
 
-            # 액세스 토큰은 보통 1시간 후 만료되므로 50분마다 미리 갱신
-            if now - token_issued_at > 50 * 60:
-                access_token, refresh_token = refresh_session(refresh_token)
+            # 서버 토큰은 30일 후 만료되므로, 하루에 한 번 미리 재로그인해서 갱신
+            if now - token_issued_at > 24 * 60 * 60:
+                access_token = sign_in()
                 token_issued_at = now
-                print("Supabase 세션 갱신 완료")
+                print("서버 세션 갱신 완료")
 
             if now - window_start >= SAMPLE_INTERVAL_SEC:
                 activity_level = movement_accum / frame_count if frame_count else 0.0
-                insert_sample(access_token, user_id, activity_level, last_posture)
+                insert_sample(access_token, activity_level, last_posture)
                 print(f"기록: activity_level={activity_level:.4f}, posture={last_posture}")
 
                 movement_accum = 0.0
