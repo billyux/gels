@@ -63,6 +63,19 @@ async function migrate() {
 
     CREATE INDEX IF NOT EXISTS activity_samples_user_time_idx
       ON activity_samples (user_id, sampled_at);
+
+    CREATE TABLE IF NOT EXISTS health_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      message TEXT NOT NULL,
+      symptom TEXT,
+      possible_condition TEXT,
+      department TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS health_logs_user_time_idx
+      ON health_logs (user_id, created_at);
   `);
 }
 

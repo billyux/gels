@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <title>고령자 AI 케어 - 통합 대시보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/HakgyoansimTteokbokkiB/Hakgyoansim_TteokbokkiB.css" type="text/css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <style>
     /* ----------------------------------
        디자인 테마 변수 설정 (이미지 기준)
@@ -351,6 +348,11 @@
     }
     .screen { display: none; flex: 1; min-width: 0; box-sizing: border-box; }
 .screen.active { display: block; }
+@media print {
+    nav, .top-profile, .btn-custom, .no-print { display: none !important; }
+    #health-screen.active { display: block !important; }
+    body, main, .screen { background: #fff !important; }
+}
 .contents
 {
     height:800px;
@@ -474,9 +476,7 @@
          <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
         <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
         <a href="#" onclick="openTempScreen()">🌡️ 온도 알림</a>
-        <a href="#" onclick="openShelterScreen()">🗺️ 무더위쉼터 지도</a>
-        <a href="#" onclick="showScreen('fall-screen')">📹 낙상 방지 및 행동 분석</a>
-       <a href="#" onclick="showScreen('notice-screen')">📱 디지털배움터</a>
+        <a href="#" onclick="openHealthScreen()">🩺 건강 기록</a>
         <a href="#" onclick="showScreen('settings-screen')">설정</a>
     </div>
 </nav>
@@ -592,59 +592,6 @@
 
 
 </main>
-<section id="notice-screen" class="screen" style="padding: 30px;">
-    <h2>📱 디지털배움터</h2>
-    <div class="card" style="display:flex; align-items:center; gap:20px;">
-        <img src="assets/mascot/reading.png" alt="모아리" style="width:90px; flex:none;">
-        <div>
-             <a href="#" onclick="showScreen('abc')">키오스크</a>
-           <a href="#" onclick="showScreen('def')">카카오택시</a>
-        </div>
-    </div>
-    <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
-</section>
-<section id="abc" class="screen" style="padding: 30px;">
-     <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
-    <div class="contents">
-    <h2>    키오스크 안내</h2>
-    <p>키오스크 사용법
-    </p>
-    <div>안녕하세요, 돌봄이 에이전트입니다.</div>
-    <p>오늘은 한 번 키오스크 사용법에 대해 알아 볼건데요</p>
-    <p>일단 키오스크에 가게 된다면 아무 화면을 클릭하세요</p>
-    <p>그리고 나면 메뉴가 뜰것입니다. 생각해두신 메뉴나 드시고 싶은 메뉴가 있으시다면</p>
-    <p>옆에 보이는 화면에서 특성을 기준으로 찾아보세요</p>
-    <p>드시고 싶은 메뉴를 선택한다면 추가적으로 더 메뉴에 추가할 것인지 뜰것입니다.</p>
-    <p>만약 메뉴에 포함된 음식이나 혹은 추가로 담을 음식이 있다면 선택을 아니면 선택 안함을 눌러주세요</p>
-    <p>이후 결제 방법을 선택후 결제를 진행하세요 이상 키오스크 안내법이였습니다. 
-        
-    </p>
-    <p>이제 모의 연습을 한 번해보자고요</p>
-    <a href=" https://billyux.github.io/mc/">여기를 클릭하시면 모의 연습으로 넘어갑니다></a>
-    </div>
-   
-</section>
-<section id="def" class="screen" style="padding: 30px;">
-     <button onclick="showScreen('dashboard-screen')" class="btn-custom">뒤로가기</button>
-    <div class="contents">
-    <h2>    키오스크 안내</h2>
-    <p>키오스크 사용법
-    </p>
-    <div>안녕하세요, 돌봄이 에이전트입니다.</div>
-    <p>오늘은 한 번 카카오택시 사용법에 대해 알아 볼건데요</p>
-    <p>일단 카카오택시를 설치해주세요</p>
-    <p>그리고 나면 카카오택시를 열면 택시 아이콘이 보일것입니다.</p>
-    <p>택시 아이콘을 클릭해주세요</p>
-    <p>그러면 이렇게 지도가 뜰것입니다. 이제 도착지를 설정해주세요</p>
-    <p>도착지를 설정하면 경로와 금액이 뜰것입니다. 이후 택시 기종을 선택하시고</p>
-    <p>예약 하시면 택시를 초기 장소에서 기다리시면 됩니다. 
-        
-    </p>
-    <p>이제 모의 연습을 한 번해보자고요</p>
-    <a href=" https://billyux.github.io/webprogramming-5/">여기를 클릭하시면 모의 연습으로 넘어갑니다></a>
-    </div>
-
-</section>
 <section id="temp-screen" class="screen" style="padding: 30px;">
     <h2>🌡️ 온도 알림</h2>
     <p id="tempStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;">불러오는 중...</p>
@@ -687,89 +634,16 @@
 
     <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
 </section>
-<section id="shelter-screen" class="screen" style="padding: 30px;">
-    <h2>🗺️ 부산 무더위쉼터 지도</h2>
-    <p id="shelterStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;"></p>
-    <div class="card" style="padding:10px;">
-        <div id="shelterMap" style="height:520px; border-radius:12px;"></div>
-    </div>
-    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
-</section>
-<section id="fall-screen" class="screen" style="padding: 30px;">
-    <h2>📹 낙상 방지 및 행동 분석</h2>
-    <p style="font-size:14px; margin-top:-10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-        <span id="cameraStatusBadge" style="display:inline-flex; align-items:center; gap:6px; padding:3px 10px; border-radius:999px; background:#fdecea; color:#c0392b; font-weight:700; font-size:12px;">
-            <span style="width:6px; height:6px; border-radius:50%; background:#c0392b;"></span>카메라 미연결
-        </span>
-        <span id="cameraStatusText" style="color:var(--text-sub);">ESP32 카메라를 연결하면 이 화면이 실시간으로 채워집니다.</span>
-    </p>
+<section id="health-screen" class="screen" style="padding: 30px;">
+    <h2>🩺 건강 기록</h2>
+    <p style="font-size:14px; color:var(--text-sub); margin-top:-10px;">AI 상담 중 말씀하신 증상을 진료과별로 정리했어요. 병원 방문이나 검진 때 참고하세요.</p>
 
-    <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;">
-        <button id="srcEsp32Btn" onclick="selectCameraSource('esp32')" class="btn-custom">ESP32 카메라</button>
-        <button id="srcDeviceBtn" onclick="selectCameraSource('device')" class="btn-custom" style="background:var(--text-sub);">📱 이 기기 카메라 (노트북/폰)</button>
+    <div style="display:flex; gap:10px; margin-bottom:16px;">
+        <button onclick="window.print()" class="btn-custom">🖨️ 인쇄 / PDF 저장</button>
+        <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="background:var(--text-sub);">뒤로가기</button>
     </div>
 
-    <div class="grid-container">
-        <section class="card" style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; min-height:280px;">
-            <div id="esp32View" style="display:flex; flex-direction:column; align-items:center; gap:16px;">
-                <svg width="90" height="130" viewBox="0 0 90 130" fill="none">
-                    <circle cx="45" cy="18" r="12" stroke="var(--primary-color)" stroke-width="3"/>
-                    <line x1="45" y1="30" x2="45" y2="75" stroke="var(--primary-color)" stroke-width="3"/>
-                    <line x1="45" y1="42" x2="20" y2="60" stroke="var(--primary-color)" stroke-width="3"/>
-                    <line x1="45" y1="42" x2="70" y2="60" stroke="var(--primary-color)" stroke-width="3"/>
-                    <line x1="45" y1="75" x2="25" y2="115" stroke="var(--primary-color)" stroke-width="3"/>
-                    <line x1="45" y1="75" x2="65" y2="115" stroke="var(--primary-color)" stroke-width="3"/>
-                    <circle cx="45" cy="42" r="3.5" fill="var(--accent-color)"/>
-                    <circle cx="20" cy="60" r="3.5" fill="var(--accent-color)"/>
-                    <circle cx="70" cy="60" r="3.5" fill="var(--accent-color)"/>
-                    <circle cx="45" cy="75" r="3.5" fill="var(--accent-color)"/>
-                    <circle cx="25" cy="115" r="3.5" fill="var(--accent-color)"/>
-                    <circle cx="65" cy="115" r="3.5" fill="var(--accent-color)"/>
-                </svg>
-                <p style="color:var(--text-sub); font-size:13px; text-align:center; margin:0;">카메라가 연결되면<br>여기에 실시간 영상과 자세 분석이 표시됩니다.</p>
-                <button class="btn-custom" disabled style="opacity:0.5; cursor:not-allowed;">📷 카메라 연결하기 (준비 중)</button>
-            </div>
-
-            <div id="deviceView" style="display:none; flex-direction:column; align-items:center; gap:12px; width:100%;">
-                <div style="position:relative; width:100%; max-width:360px;">
-                    <video id="deviceVideo" autoplay playsinline muted style="display:block; width:100%; border-radius:12px; background:#000;"></video>
-                    <canvas id="poseCanvas" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
-                </div>
-                <p id="deviceCamMsg" style="font-size:13px; color:var(--text-sub); text-align:center; margin:0;"></p>
-                <p id="fallAlert" style="display:none; font-size:13px; font-weight:700; color:#c0392b; background:#fdecea; padding:6px 12px; border-radius:999px; margin:0;">🚨 낙상 의심 — 자세가 갑자기 낮아졌어요</p>
-                <button id="stopCamBtn" onclick="stopDeviceCamera()" class="btn-danger" style="display:none; margin-bottom:0;">카메라 끄기</button>
-            </div>
-        </section>
-
-        <section class="card">
-            <h2 style="font-size:16px;">예정된 기능</h2>
-            <div style="display:flex; flex-direction:column; gap:16px;">
-                <div style="display:flex; gap:12px; align-items:flex-start;">
-                    <span style="font-size:20px;">🚨</span>
-                    <div>
-                        <strong style="font-size:14px;">낙상 감지 <span style="font-size:11px; font-weight:normal; color:var(--primary-color); background:#e9f5e1; padding:1px 8px; border-radius:999px;">기기 카메라로 실험 중</span></strong>
-                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">골반 높이가 갑자기 낮아지면 화면에 낙상 의심 표시를 해요 (아직 참고용 — 보호자 알림 발송은 준비 중).</p>
-                    </div>
-                </div>
-                <div style="display:flex; gap:12px; align-items:flex-start;">
-                    <span style="font-size:20px;">⏱️</span>
-                    <div>
-                        <strong style="font-size:14px;">장시간 미동 감지</strong>
-                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">오랫동안 움직임이 없으면 낙상 의심으로 확인해요.</p>
-                    </div>
-                </div>
-                <div style="display:flex; gap:12px; align-items:flex-start;">
-                    <span style="font-size:20px;">📊</span>
-                    <div>
-                        <strong style="font-size:14px;">활동량 리포트</strong>
-                        <p style="font-size:13px; color:var(--text-sub); margin:2px 0 0;">하루 활동량과 방 이동 빈도를 매일 저녁 요약해드려요.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <button onclick="stopDeviceCamera(); showScreen('dashboard-screen')" class="btn-custom" style="margin-top:20px;">뒤로가기</button>
+    <div id="healthReportArea"></div>
 </section>
 <section id="settings-screen" class="screen" style="padding: 30px;">
     <h2>⚙️ 설정</h2>
@@ -825,10 +699,6 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection@2.1.3/dist/pose-detection.min.js"></script>
 <script>
 /* ======================
    🔌 백엔드 API 초기화
@@ -1434,314 +1304,116 @@ async function loadWaterCalendar(){
 }
 
 /* ======================
-   🌡️ 무더위쉼터 지도
-====================== */
-let shelterMap = null;
-let shelterMarkersLayer = null;
-
-async function openShelterScreen(){
-    showScreen("shelter-screen");
-
-    if(!shelterMap){
-        shelterMap = L.map("shelterMap").setView([35.18, 129.075], 11);
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-            maxZoom: 19
-        }).addTo(shelterMap);
-
-        shelterMarkersLayer = L.markerClusterGroup();
-        shelterMap.addLayer(shelterMarkersLayer);
-    }
-
-    setTimeout(() => shelterMap.invalidateSize(), 100);
-
-    const statusEl = document.getElementById("shelterStatus");
-    statusEl.textContent = "불러오는 중...";
-
-    try{
-        // sggCd=26 → 부산광역시 전체 (구/군별로 보려면 예: 26230=부산진구)
-        const data = await apiFetch("/shelters?sggCd=26");
-
-        if(data.error){
-            statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + data.error;
-            return;
-        }
-
-        shelterMarkersLayer.clearLayers();
-
-        const markers = data.shelters.map((s) =>
-            L.marker([s.lat, s.lng]).bindPopup(
-                `<strong>${s.name}</strong><br>${s.address}<br>` +
-                `수용인원: ${s.capacity ?? "정보 없음"}명<br>` +
-                `에어컨: ${s.aircon ? "있음" : "없음"}`
-            )
-        );
-
-        shelterMarkersLayer.addLayers(markers);
-
-        statusEl.textContent = `부산 전체 무더위쉼터 ${data.shelters.length}곳을 표시했습니다. 지도를 확대하면 개별 위치가 보여요.`;
-    }catch(err){
-        statusEl.textContent = "쉼터 정보를 불러오지 못했습니다: " + err.message;
-    }
-}
-
-/* ======================
    🖥️ 화면 전환
 ====================== */
+
 /* ======================
-   📹 낙상 방지 - 카메라 소스 선택
+   🩺 건강 기록
 ====================== */
-let deviceStream = null;
-let poseDetector = null;
-let poseRafId = null;
-let hipHistory = []; // { t, y } — 엉덩이(골반) 높이 기록, 낙상 의심 판단용
-let fallAlertShownAt = 0;
+async function openHealthScreen(){
+    showScreen("health-screen");
 
-/* 자세 추정 모델은 한 번만 불러와서 재사용 */
-async function loadPoseModel(){
-    if(poseDetector) return poseDetector;
+    const area = document.getElementById("healthReportArea");
+    area.innerHTML = '<p style="color:var(--text-sub);">불러오는 중...</p>';
 
-    const msg = document.getElementById("deviceCamMsg");
-    msg.textContent = "AI 자세 분석 모델을 불러오는 중...";
-
-    await tf.setBackend("webgl");
-    await tf.ready();
-
-    poseDetector = await poseDetection.createDetector(
-        poseDetection.SupportedModels.MoveNet,
-        { modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING }
-    );
-
-    return poseDetector;
-}
-
-function startPoseDetection(video){
-    hipHistory = [];
-    fallAlertShownAt = 0;
-
-    const canvas = document.getElementById("poseCanvas");
-    const ctx = canvas.getContext("2d");
-
-    async function loop(){
-        if(!deviceStream) return; // 카메라가 꺼졌으면 루프 종료
-
-        canvas.width = video.clientWidth;
-        canvas.height = video.clientHeight;
-
-        try{
-            const poses = await poseDetector.estimatePoses(video);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            if(poses[0]){
-                drawPose(ctx, poses[0], video, canvas);
-                checkFall(poses[0], canvas.height);
-            }
-        }catch(e){
-            // 프레임 하나 실패한 건 무시하고 다음 프레임 계속 시도
-        }
-
-        poseRafId = requestAnimationFrame(loop);
-    }
-
-    poseRafId = requestAnimationFrame(loop);
-}
-
-function drawPose(ctx, pose, video, canvas){
-    const scaleX = canvas.width / video.videoWidth;
-    const scaleY = canvas.height / video.videoHeight;
-
-    const pairs = [
-        ["left_shoulder","right_shoulder"], ["left_shoulder","left_hip"], ["right_shoulder","right_hip"],
-        ["left_hip","right_hip"], ["left_shoulder","left_elbow"], ["left_elbow","left_wrist"],
-        ["right_shoulder","right_elbow"], ["right_elbow","right_wrist"], ["left_hip","left_knee"],
-        ["left_knee","left_ankle"], ["right_hip","right_knee"], ["right_knee","right_ankle"]
-    ];
-
-    const byName = {};
-    pose.keypoints.forEach(kp => byName[kp.name] = kp);
-
-    ctx.strokeStyle = "#90a97a";
-    ctx.lineWidth = 3;
-    pairs.forEach(([a, b]) => {
-        const ka = byName[a], kb = byName[b];
-        if(ka && kb && ka.score > 0.3 && kb.score > 0.3){
-            ctx.beginPath();
-            ctx.moveTo(ka.x * scaleX, ka.y * scaleY);
-            ctx.lineTo(kb.x * scaleX, kb.y * scaleY);
-            ctx.stroke();
-        }
-    });
-
-    pose.keypoints.forEach(kp => {
-        if(kp.score > 0.3){
-            ctx.beginPath();
-            ctx.arc(kp.x * scaleX, kp.y * scaleY, 4, 0, 2 * Math.PI);
-            ctx.fillStyle = "#c89c87";
-            ctx.fill();
-        }
-    });
-}
-
-/* 아주 단순한 낙상 의심 판단: 골반 높이가 짧은 시간 안에 화면 세로 길이의
-   25% 이상 급격히 내려가서 그 상태로 유지되면 "낙상 의심"으로 표시.
-   정밀한 판정이 아니라 참고용 알림임을 프론트에도 명시하고 있음. */
-function checkFall(pose, canvasHeight){
-    const byName = {};
-    pose.keypoints.forEach(kp => byName[kp.name] = kp);
-    const lHip = byName["left_hip"], rHip = byName["right_hip"];
-    if(!lHip || !rHip || lHip.score < 0.3 || rHip.score < 0.3) return;
-
-    const hipY = (lHip.y + rHip.y) / 2;
-    const now = performance.now();
-
-    hipHistory.push({ t: now, y: hipY });
-    hipHistory = hipHistory.filter(h => now - h.t < 3000); // 최근 3초만 유지
-
-    if(hipHistory.length < 2) return;
-
-    const oldest = hipHistory[0];
-    const drop = hipY - oldest.y; // 값이 커질수록(아래로) 내려간 것
-    const droppedFast = drop > canvasHeight * 0.22 && (now - oldest.t) < 1500;
-
-    const fallAlert = document.getElementById("fallAlert");
-
-    if(droppedFast){
-        fallAlert.style.display = "inline-block";
-        fallAlertShownAt = now;
-    }else if(fallAlertShownAt && now - fallAlertShownAt > 4000){
-        fallAlert.style.display = "none";
-        fallAlertShownAt = 0;
+    try{
+        const { logs } = await apiFetch("/health-logs");
+        renderHealthReport(logs);
+    }catch(err){
+        area.innerHTML = `<p style="color:#c0392b;">불러오지 못했습니다: ${err.message}</p>`;
     }
 }
 
-function stopPoseDetection(){
-    if(poseRafId){
-        cancelAnimationFrame(poseRafId);
-        poseRafId = null;
-    }
-    hipHistory = [];
-    fallAlertShownAt = 0;
-    const canvas = document.getElementById("poseCanvas");
-    if(canvas){
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-    const fallAlert = document.getElementById("fallAlert");
-    if(fallAlert) fallAlert.style.display = "none";
-}
+function renderHealthReport(logs){
+    const area = document.getElementById("healthReportArea");
 
-function setCameraStatus(connected, text){
-    const badge = document.getElementById("cameraStatusBadge");
-    const statusText = document.getElementById("cameraStatusText");
-    if(!badge || !statusText) return;
-
-    if(connected){
-        badge.style.background = "#e9f5e1";
-        badge.style.color = "var(--primary-color)";
-        badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--primary-color);"></span>카메라 연결됨';
-    }else{
-        badge.style.background = "#fdecea";
-        badge.style.color = "#c0392b";
-        badge.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:#c0392b;"></span>카메라 미연결';
-    }
-    statusText.textContent = text;
-}
-
-function selectCameraSource(source){
-    const esp32View = document.getElementById("esp32View");
-    const deviceView = document.getElementById("deviceView");
-    const esp32Btn = document.getElementById("srcEsp32Btn");
-    const deviceBtn = document.getElementById("srcDeviceBtn");
-
-    if(source === "esp32"){
-        esp32View.style.display = "flex";
-        deviceView.style.display = "none";
-        esp32Btn.style.background = "var(--primary-color)";
-        deviceBtn.style.background = "var(--text-sub)";
-        stopDeviceCamera();
-        setCameraStatus(false, "ESP32 카메라를 연결하면 이 화면이 실시간으로 채워집니다.");
-    }else{
-        esp32View.style.display = "none";
-        deviceView.style.display = "flex";
-        deviceBtn.style.background = "var(--primary-color)";
-        esp32Btn.style.background = "var(--text-sub)";
-        startDeviceCamera();
-    }
-}
-
-async function startDeviceCamera(){
-    // 이미 켜져있는 스트림이 있다면 새로 요청하기 전에 반드시 먼저 끄기
-    // (안 그러면 이전 스트림이 그대로 남아서 "카메라 끄기"를 눌러도
-    //  최근 스트림만 꺼지고 카메라 표시등은 계속 켜져있게 됨)
-    stopDeviceCamera();
-
-    const video = document.getElementById("deviceVideo");
-    const msg = document.getElementById("deviceCamMsg");
-    const stopBtn = document.getElementById("stopCamBtn");
-
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-        msg.textContent = "이 브라우저는 카메라 사용을 지원하지 않아요.";
+    if(!logs || logs.length === 0){
+        area.innerHTML = '<p style="color:var(--text-sub);">아직 기록된 증상이 없어요. AI 상담에서 아픈 곳을 말씀해주시면 여기에 정리돼요.</p>';
         return;
     }
 
-    msg.textContent = "카메라 권한을 요청하는 중...";
+    // 진료과별로 묶기
+    const byDept = {};
+    for(const log of logs){
+        const dept = log.department || "기타";
+        if(!byDept[dept]) byDept[dept] = [];
+        byDept[dept].push(log);
+    }
 
-    try{
-        // 휴대폰이면 후면 카메라 우선, 안 되면 아무 카메라나 사용
-        let stream;
-        try{
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } },
-                audio: false
-            });
-        }catch(e){
-            stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    area.innerHTML = "";
+
+    for(const dept of Object.keys(byDept)){
+        const section = document.createElement("div");
+        section.className = "card";
+        section.style.marginBottom = "20px";
+
+        const heading = document.createElement("h2");
+        heading.style.fontSize = "17px";
+        heading.textContent = `🏥 ${dept}`;
+        section.appendChild(heading);
+
+        const table = document.createElement("table");
+        table.className = "post-table";
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th>날짜</th>
+                    <th>말씀하신 내용</th>
+                    <th>증상</th>
+                    <th>추정 병명</th>
+                    <th class="no-print">관리</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
+
+        const tbody = table.querySelector("tbody");
+        for(const log of byDept[dept]){
+            const tr = document.createElement("tr");
+
+            const dateTd = document.createElement("td");
+            dateTd.textContent = (log.created_at || "").slice(0, 16).replace("T", " ");
+            tr.appendChild(dateTd);
+
+            const msgTd = document.createElement("td");
+            msgTd.textContent = log.message;
+            tr.appendChild(msgTd);
+
+            const symptomTd = document.createElement("td");
+            symptomTd.textContent = log.symptom || "-";
+            tr.appendChild(symptomTd);
+
+            const condTd = document.createElement("td");
+            condTd.textContent = log.possible_condition || "-";
+            tr.appendChild(condTd);
+
+            const manageTd = document.createElement("td");
+            manageTd.className = "no-print";
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "삭제";
+            delBtn.className = "btn-danger";
+            delBtn.onclick = () => deleteHealthLog(log.id);
+            manageTd.appendChild(delBtn);
+            tr.appendChild(manageTd);
+
+            tbody.appendChild(tr);
         }
 
-        deviceStream = stream;
-
-        // srcObject를 넣기 전에 먼저 리스너를 걸어야 함 — 순서가 바뀌면
-        // 메타데이터가 이미 로드되어 이벤트를 놓칠 수 있음 (특히 빠른 환경에서)
-        video.onloadedmetadata = async () => {
-            try{
-                await loadPoseModel();
-                msg.textContent = "";
-                startPoseDetection(video);
-            }catch(e){
-                msg.textContent = "자세 분석 모델을 불러오지 못했어요 (영상만 표시됩니다): " + (e.message || e);
-            }
-        };
-
-        video.srcObject = stream;
-        stopBtn.style.display = "inline-block";
-        setCameraStatus(true, "이 기기 카메라로 실시간 영상을 보고 있어요.");
-    }catch(err){
-        msg.textContent = "카메라를 사용할 수 없어요: " + (err.message || err.name || err);
-        setCameraStatus(false, "카메라 권한을 허용했는지 확인해주세요.");
+        section.appendChild(table);
+        area.appendChild(section);
     }
 }
 
-function stopDeviceCamera(){
-    stopPoseDetection();
-
-    if(deviceStream){
-        deviceStream.getTracks().forEach(t => t.stop());
-        deviceStream = null;
+async function deleteHealthLog(id){
+    try{
+        await apiFetch(`/health-logs/${id}`, { method: "DELETE" });
+        openHealthScreen();
+    }catch(err){
+        alert("삭제하지 못했습니다: " + err.message);
     }
-    const video = document.getElementById("deviceVideo");
-    if(video) video.srcObject = null;
-    const stopBtn = document.getElementById("stopCamBtn");
-    if(stopBtn) stopBtn.style.display = "none";
 }
 
 function showScreen(screenId){
-    // 낙상 방지 화면을 벗어나면 켜져 있던 기기 카메라를 꺼줌
-    const fallScreen = document.getElementById('fall-screen');
-    if(fallScreen && fallScreen.classList.contains('active') && screenId !== 'fall-screen'){
-        stopDeviceCamera();
-    }
-
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
 }

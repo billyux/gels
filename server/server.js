@@ -316,6 +316,57 @@ app.post(
 /* ======================
    AI 챗봇 (Gemini 프록시)
 ====================== */
+
+// 사용자 메시지에 증상 언급이 있으면 증상/추정 병명/진료과를 JSON으로 추출
+async function extractHealthInfo(text) {
+  try {
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text:
+                    "다음은 고령자가 AI 상담사에게 보낸 메시지입니다. " +
+                    "이 메시지에 몸이 아프거나 불편한 증상(통증, 어지러움, 소화불량 등)에 대한 언급이 있는지 판단하세요.\n\n" +
+                    `메시지: "${text}"\n\n` +
+                    "증상 언급이 있다면 symptom(증상 요약), possible_condition(추정 가능한 병명·질환, 확진 아님을 전제로 가능성만), " +
+                    "department(가장 적합한 진료과 하나. 예: 내과, 외과, 정형외과, 신경과, 이비인후과, 안과, 피부과, 치과, 비뇨의학과, 산부인과, 정신건강의학과 중 선택하거나 그 외 적절한 과)를 채우고, " +
+                    "증상 언급이 없다면 has_symptom을 false로 하고 나머지는 빈 문자열로 두세요. " +
+                    "아래 JSON 형식으로만 답하세요.\n" +
+                    '{"has_symptom": boolean, "symptom": string, "possible_condition": string, "department": string}',
+                },
+              ],
+            },
+          ],
+          generationConfig: { responseMimeType: "application/json" },
+        }),
+      }
+    );
+
+    const data = await geminiRes.json();
+    const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed.has_symptom || !parsed.symptom) return null;
+
+    return {
+      symptom: String(parsed.symptom).slice(0, 500),
+      possible_condition: String(parsed.possible_condition || "").slice(0, 500),
+      department: String(parsed.department || "").slice(0, 100),
+    };
+  } catch (err) {
+    console.error("증상 추출 실패:", err);
+    return null;
+  }
+}
+
 app.post(
   "/api/ai-chat",
   requireAuth,
@@ -358,8 +409,51 @@ app.post(
       const answer = data?.candidates?.[0]?.content?.parts?.[0]?.text;
       res.json({ answer: answer || "응답을 생성하지 못했습니다." });
     } catch (err) {
-      res.status(500).json({ error: String(err) });
+      return res.status(500).json({ error: String(err) });
     }
+
+    // 응답을 보낸 뒤 백그라운드로 증상 추출·저장 (실패해도 사용자 응답에는 영향 없음)
+    try {
+      const healthInfo = await extractHealthInfo(text);
+      if (healthInfo) {
+        await run(
+          "INSERT INTO health_logs (user_id, message, symptom, possible_condition, department) VALUES (?, ?, ?, ?, ?)",
+          [req.user.id, text, healthInfo.symptom, healthInfo.possible_condition, healthInfo.department]
+        );
+      }
+    } catch (err) {
+      console.error("건강 기록 저장 실패:", err);
+    }
+  })
+);
+
+/* ======================
+   건강 기록 (증상 리포트)
+====================== */
+app.get(
+  "/api/health-logs",
+  requireAuth,
+  h(async (req, res) => {
+    const rows = await all(
+      "SELECT id, message, symptom, possible_condition, department, created_at FROM health_logs WHERE user_id = ? ORDER BY created_at DESC",
+      [req.user.id]
+    );
+    res.json({ logs: rows });
+  })
+);
+
+app.delete(
+  "/api/health-logs/:id",
+  requireAuth,
+  h(async (req, res) => {
+    const log = await get("SELECT user_id FROM health_logs WHERE id = ?", [req.params.id]);
+    if (!log) return res.status(404).json({ error: "기록을 찾을 수 없습니다." });
+    if (log.user_id !== req.user.id) {
+      return res.status(403).json({ error: "본인 기록만 삭제할 수 있습니다." });
+    }
+
+    await run("DELETE FROM health_logs WHERE id = ?", [req.params.id]);
+    res.json({ ok: true });
   })
 );
 
