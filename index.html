@@ -2,21 +2,26 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<title>고령자 AI 케어 - 통합 대시보드</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/fonts-archive/HakgyoansimTteokbokkiB/Hakgyoansim_TteokbokkiB.css" type="text/css" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>고령자 AI 케어</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
     /* ----------------------------------
-       디자인 테마 변수 설정 (이미지 기준)
+       디자인 테마 변수 (네이비 리포트 톤)
     ---------------------------------- */
     :root {
-        --bg-color: #f4f1ea;         /* 배경색 (화이트 세이지) */
-        --card-bg: #ffffff;         /* 카드 배경 (순백색) */
-        --text-main: #333333;       /* 메인 텍스트 */
-        --text-sub: #777777;        /* 보조 텍스트 */
-        --primary-color: #90a97a;   /* 연두색 (메인 포인트) */
-        --accent-color: #c89c87;    /* 살구색 (서브 포인트) */
-        --border-color: #e0e0e0;    /* 테두리 색상 */
-        --font-family: 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+        --bg-color: #0d1830;        /* 페이지 배경 */
+        --card-bg: #14213d;         /* 카드·사이드바 */
+        --row-bg: #1c2b4a;          /* 카드 안 행·입력창 */
+        --row-hover: #22345a;
+        --border-color: #26385e;
+        --text-main: #ffffff;
+        --text-sub: #9fb0cf;        /* 라벨·보조 텍스트 */
+        --badge-bg: #3d5a8a;        /* 본인 배지·기본 버튼 */
+        --badge-hover: #4a6aa0;
+        --danger: #e5404a;          /* 보호자 배지·삭제 */
+        --unknown: #ff8fa3;         /* 미확인 값 */
+        --font-family: 'Pretendard', 'Segoe UI', 'Noto Sans KR', sans-serif;
     }
 
     body {
@@ -30,22 +35,21 @@
         overflow-wrap: break-word;
     }
 
-    /* 좁은 화면(모바일)에서는 사이드바를 위로, 본문을 아래로 쌓아서
-       본문 폭이 비정상적으로 좁아지는 것을 막음 */
+    /* 좁은 화면(모바일)에서는 사이드바를 위로, 본문을 아래로 쌓음 */
     @media (max-width: 720px) {
         body { flex-direction: column; }
-        .sidebar { width: 100%; box-sizing: border-box; }
+        .sidebar { width: 100%; }
+        .screen { padding: 20px 16px !important; }
     }
 
     /* ----------------------------------
        레이아웃 (왼쪽 메뉴 + 메인 콘텐츠)
     ---------------------------------- */
-    /* 왼쪽 메뉴바 스타일 (기존 디자인 참고) */
     .sidebar {
-        width: 250px;
+        width: 240px;
         background: var(--card-bg);
         border-right: 1px solid var(--border-color);
-        padding: 30px;
+        padding: 28px 20px;
         display: none;
         flex-direction: column;
         box-sizing: border-box;
@@ -54,174 +58,190 @@
     body.authed .sidebar { display: flex; }
 
     .logo {
-        font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
-        font-size: 30px;
-        font-weight: bold;
-        color: var(--primary-color);
-        margin-bottom: 40px;
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 28px;
     }
 
     .profile-short {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 30px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        background: var(--row-bg);
+        border-radius: 12px;
     }
 
-    .avatar {
-        width: 40px; height: 40px;
-        border-radius: 50%;
-        background: #fdf8f0;
-        overflow: hidden;
-        flex: none;
-    }
-
-    .avatar svg { display: block; width: 100%; height: 100%; }
+    .profile-short strong { font-size: 16px; }
 
     .menu-list a {
         display: block;
-        padding: 12px 15px;
+        padding: 12px 16px;
+        margin-bottom: 4px;
         color: var(--text-sub);
         text-decoration: none;
-        border-radius: 8px;
-        transition: 0.2s;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        transition: 0.15s;
     }
 
     .menu-list a:hover, .menu-list a.active {
-        background: #f0f8e8;
-        color: var(--primary-color);
-        font-weight: 500;
+        background: var(--row-bg);
+        color: var(--text-main);
     }
 
-    /* 메인 랩퍼 */
-    .main-content {
-        flex: 1;
-        padding: 30px;
-    }
-
-    /* 헤더 영역 */
     header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 24px;
     }
 
     .page-title {
-        font-family: 'Hakgyoansim Tteokbokki B', var(--font-family);
-        font-size: 40px;
-        font-weight: 700;
+        font-size: 28px;
+        font-weight: 800;
+        margin: 0;
     }
 
-    .top-profile {
-        display: flex; align-items: center; gap: 15px;
+    .page-desc {
+        font-size: 15px;
+        color: var(--text-sub);
+        margin: -14px 0 20px;
     }
-    .top-profile span { font-size: 14px; }
+
+    #topProfileName { font-size: 15px; color: var(--text-sub); }
 
     /* ----------------------------------
-       카드 디자인 (전면 수정)
+       카드
     ---------------------------------- */
     .card {
         background: var(--card-bg);
-        padding: 25px;
-        border-radius: 15px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* 부드러운 그림자 */
+        padding: 24px;
+        border-radius: 16px;
     }
 
     .card h2 {
-        font-size: 18px;
-        margin-top: 0;
-        margin-bottom: 20px;
-        color: var(--text-main);
+        font-size: 19px;
+        font-weight: 800;
+        margin: 0 0 16px;
     }
 
     /* ----------------------------------
-       개별 컴포넌트 스타일
+       버튼 / 입력
     ---------------------------------- */
-    /* 버튼 스타일 수정 */
     .btn-custom {
-        background: var(--primary-color);
+        background: var(--badge-bg);
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 8px;
+        padding: 11px 20px;
+        border-radius: 10px;
         cursor: pointer;
-        font-weight: 600;
-        transition: 0.2s;
+        font-family: var(--font-family);
+        font-size: 15px;
+        font-weight: 700;
+        transition: 0.15s;
     }
 
-    .btn-custom:hover { background: #7f966b; }
+    .btn-custom:hover { background: var(--badge-hover); }
+
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-sub);
+    }
+
+    .btn-ghost:hover { background: var(--row-bg); color: var(--text-main); }
 
     .btn-danger {
-        background: #ff7676;
-        color: white;
-        border: none;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-size: 12px;
+        background: transparent;
+        color: var(--unknown);
+        border: 1px solid #5a3346;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-family: var(--font-family);
+        font-size: 13px;
+        font-weight: 600;
         cursor: pointer;
-        margin-bottom: 10px;
     }
 
-    /* 입력창 스타일 수정 */
+    .btn-danger:hover { background: rgba(229, 64, 74, 0.15); }
+
     textarea, input {
         border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: #fafafa;
+        border-radius: 10px;
+        background: var(--row-bg);
+        color: var(--text-main);
         font-family: var(--font-family);
+        font-size: 16px;
     }
+
+    textarea::placeholder, input::placeholder { color: var(--text-sub); }
 
     textarea:focus, input:focus {
         outline: none;
-        border-color: var(--primary-color);
+        border-color: var(--badge-hover);
     }
 
-    /* 채팅 UI 스타일 (말풍선 개선) */
-   .chat{
-    height:200px;
-    overflow-y:auto;
-    overflow-x:hidden;
+    /* ----------------------------------
+       AI 채팅
+    ---------------------------------- */
+    .chat {
+        height: 420px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-color);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 12px;
+    }
 
-    display:flex;
-    flex-direction:column;
+    .chat-empty {
+        margin: auto;
+        color: var(--text-sub);
+        font-size: 15px;
+        text-align: center;
+        line-height: 1.7;
+    }
 
-    background:#f5f7fb;
-    border-radius:15px;
-    padding:15px;
-}
-
-    .user,
-.ai{
-
-    max-width:70%;
-
-    padding:12px 18px;
-
-    border-radius:18px;
-
-    margin:8px;
-
-    white-space:pre-wrap;
-
-    word-break:break-word;
-
-    overflow-wrap:anywhere;
-
-    box-sizing:border-box;
-}
+    .user, .ai {
+        max-width: 78%;
+        padding: 12px 16px;
+        margin: 6px 0;
+        font-size: 16px;
+        line-height: 1.65;
+        white-space: pre-wrap;
+        word-break: break-word;
+        overflow-wrap: anywhere;
+        box-sizing: border-box;
+    }
 
     .user {
-        background: var(--primary-color);
-        color: white;
-        border-radius: 10px 10px 0 10px;
+        align-self: flex-end;
+        background: var(--badge-bg);
+        border-radius: 14px 14px 4px 14px;
     }
 
     .ai {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 10px 10px 10px 0;
+        align-self: flex-start;
+        background: var(--row-bg);
+        border-radius: 14px 14px 14px 4px;
+    }
+
+    #input {
+        width: 100%;
+        padding: 12px 14px;
+        box-sizing: border-box;
+        resize: vertical;
+    }
+
+    .chat-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 10px;
     }
 
     .thinking-dot {
@@ -241,162 +261,166 @@
         40% { transform: translateY(-5px); opacity: 1; }
     }
 
-    /* 게시판 테이블 스타일 */
-    .post-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
+    /* ----------------------------------
+       PGHD 요약 리포트
+    ---------------------------------- */
+    .report-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 20px;
+        align-items: start;
     }
 
-    .post-table th {
-        text-align: left;
-        padding: 12px 5px;
-        border-bottom: 2px solid var(--border-color);
+    @media (max-width: 480px) {
+        .report-list { grid-template-columns: 1fr; }
+    }
+
+    .report {
+        background: var(--card-bg);
+        border-radius: 16px;
+        padding: 22px 20px 20px;
+    }
+
+    .report-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 18px;
+    }
+
+    .report-title {
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0 0 6px;
+    }
+
+    .report-meta {
+        font-size: 13px;
         color: var(--text-sub);
-        font-weight: normal;
     }
 
-    .post-table td {
-        padding: 15px 5px;
-        border-bottom: 1px solid var(--border-color);
-        color: var(--text-main);
+    .report-row {
+        display: grid;
+        grid-template-columns: 96px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        background: var(--row-bg);
+        border-radius: 8px;
+        padding: 11px 14px;
+        margin-top: 8px;
+        min-height: 26px;
     }
 
-    .post-table tr:hover td { background: #f9f9f9; }
+    .report-label {
+        font-size: 13px;
+        color: var(--text-sub);
+    }
 
-    .screen { display: none; flex: 1; min-width: 0; box-sizing: border-box; }
-.screen.active { display: block; }
-@media print {
-    nav, .top-profile, .btn-custom, .no-print { display: none !important; }
-    #health-screen.active { display: block !important; }
-    body, main, .screen { background: #fff !important; }
-}
+    .report-value {
+        font-size: 15px;
+        font-weight: 700;
+    }
+
+    .report-value.unknown { color: var(--unknown); }
+
+    .badge {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 5px 14px;
+        border-radius: 999px;
+        background: var(--badge-bg);
+        white-space: nowrap;
+    }
+
+    .badge.guardian { background: var(--danger); }
+
+    .report-empty {
+        color: var(--text-sub);
+        font-size: 15px;
+        line-height: 1.7;
+    }
+
+    /* ----------------------------------
+       화면 전환 / 인쇄
+    ---------------------------------- */
+    .screen { display: none; flex: 1; min-width: 0; box-sizing: border-box; padding: 32px; }
+    .screen.active { display: block; }
+
+    @media print {
+        nav, .no-print { display: none !important; }
+        body, .screen { background: var(--bg-color) !important; }
+        * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .report { break-inside: avoid; }
+    }
 </style>
 </head>
 <body>
 <nav class="sidebar">
-    <div class="logo">💙 AI 케어 시스템</div>
+    <div class="logo">💙 AI 케어</div>
     <div class="profile-short">
-        <div class="avatar">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="50" fill="#fdf8f0"/>
-                <path d="M20 90 Q50 72 80 90 L80 101 L20 101 Z" fill="#90a97a"/>
-                <path d="M40 79 L50 91 L60 79 Z" fill="#c89c87"/>
-                <circle cx="50" cy="48" r="34" fill="#ffffff"/>
-                <circle cx="28" cy="26" r="10" fill="#ffffff"/>
-                <circle cx="42" cy="18" r="11" fill="#ffffff"/>
-                <circle cx="58" cy="18" r="11" fill="#ffffff"/>
-                <circle cx="72" cy="26" r="10" fill="#ffffff"/>
-                <g>
-                    <ellipse cx="70" cy="21" rx="4.5" ry="6" fill="#f6b8c4"/>
-                    <ellipse cx="76" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(72 76 25)"/>
-                    <ellipse cx="74" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(144 74 33)"/>
-                    <ellipse cx="66" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(216 66 33)"/>
-                    <ellipse cx="64" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(288 64 25)"/>
-                    <circle cx="70" cy="28" r="4" fill="#f7d774"/>
-                </g>
-                <ellipse cx="40" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
-                <ellipse cx="60" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
-                <ellipse cx="30" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
-                <ellipse cx="70" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
-                <path d="M45 60 Q50 65 55 60" stroke="#3a2e26" stroke-width="2" fill="none" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <div>
-            <strong id="sidebarName">-</strong>
-            <div style="font-size:12px; color:var(--text-sub);">노인회원</div>
-        </div>
+        <strong id="sidebarName">-</strong>
+        <div style="font-size:13px; color:var(--text-sub); margin-top:2px;">노인회원</div>
     </div>
     <div class="menu-list">
-        <a href="#" onclick="showScreen('dashboard-screen')">🤖 AI 상담</a>
-        <a href="#" onclick="openHealthScreen()">🩺 건강 기록</a>
-        <a href="#" onclick="showScreen('settings-screen')">설정</a>
+        <a href="#" data-screen="dashboard-screen" onclick="showScreen('dashboard-screen')">🤖 AI 상담</a>
+        <a href="#" data-screen="health-screen" onclick="openHealthScreen()">🩺 건강 기록</a>
+        <a href="#" data-screen="settings-screen" onclick="showScreen('settings-screen')">설정</a>
     </div>
 </nav>
 
-<main id="dashboard-screen" class="screen" style="padding: 30px;">
-
+<main id="dashboard-screen" class="screen">
     <header>
         <h1 class="page-title">AI 상담</h1>
-        <div class="top-profile">
-            <div class="avatar">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="50" cy="50" r="50" fill="#fdf8f0"/>
-                <path d="M20 90 Q50 72 80 90 L80 101 L20 101 Z" fill="#90a97a"/>
-                <path d="M40 79 L50 91 L60 79 Z" fill="#c89c87"/>
-                <circle cx="50" cy="48" r="34" fill="#ffffff"/>
-                <circle cx="28" cy="26" r="10" fill="#ffffff"/>
-                <circle cx="42" cy="18" r="11" fill="#ffffff"/>
-                <circle cx="58" cy="18" r="11" fill="#ffffff"/>
-                <circle cx="72" cy="26" r="10" fill="#ffffff"/>
-                <g>
-                    <ellipse cx="70" cy="21" rx="4.5" ry="6" fill="#f6b8c4"/>
-                    <ellipse cx="76" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(72 76 25)"/>
-                    <ellipse cx="74" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(144 74 33)"/>
-                    <ellipse cx="66" cy="33" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(216 66 33)"/>
-                    <ellipse cx="64" cy="25" rx="4.5" ry="6" fill="#f6b8c4" transform="rotate(288 64 25)"/>
-                    <circle cx="70" cy="28" r="4" fill="#f7d774"/>
-                </g>
-                <ellipse cx="40" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
-                <ellipse cx="60" cy="50" rx="3.2" ry="4.2" fill="#3a2e26"/>
-                <ellipse cx="30" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
-                <ellipse cx="70" cy="60" rx="6" ry="4" fill="#fbcdd6" opacity="0.85"/>
-                <path d="M45 60 Q50 65 55 60" stroke="#3a2e26" stroke-width="2" fill="none" stroke-linecap="round"/>
-            </svg>
-        </div>
-            <span id="topProfileName">안녕하세요, 회원님</span>
-        </div>
+        <span id="topProfileName">안녕하세요, 회원님</span>
     </header>
 
-        <section class="card">
-            <h2>AI 상담</h2>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="assets/mascot/consult-pose.png" alt="모아리" style="height:140px;">
-                    <span style="font-size:14px; color:var(--text-sub);">AI 상담 도우미</span>
-                </div>
-                <button onclick="clearChat()" class="btn-danger">대화 내용 삭제</button>
-            </div>
-            <div id="chat" class="chat"></div>
-            <textarea id="input" placeholder="궁금한 점을 물어보세요..." rows="2"></textarea>
-            <div style="text-align:right;">
-                <button onclick="voiceInput()" class="btn-custom" style="background:var(--accent-color);">🎤 음성 입력</button>
-                <button onclick="ask()" class="btn-custom">전송</button>
-            </div>
-        </section>
-
+    <section class="card" style="max-width:820px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <span style="font-size:15px; color:var(--text-sub);">궁금한 점이나 불편한 곳을 편하게 말씀해 주세요.</span>
+            <button onclick="clearChat()" class="btn-danger">대화 지우기</button>
+        </div>
+        <div id="chat" class="chat">
+            <p class="chat-empty">예: "허리가 좀 아파", "요즘 밤에 잠이 안 와"</p>
+        </div>
+        <textarea id="input" placeholder="여기에 입력하거나 🎤 음성 입력을 눌러 주세요" rows="2"></textarea>
+        <div class="chat-actions">
+            <button onclick="voiceInput()" class="btn-custom btn-ghost">🎤 음성 입력</button>
+            <button onclick="ask()" class="btn-custom">보내기</button>
+        </div>
+    </section>
 </main>
-<section id="health-screen" class="screen" style="padding: 30px;">
-    <h2>🩺 건강 기록</h2>
-    <p style="font-size:14px; color:var(--text-sub); margin-top:-10px;">AI 상담 중 말씀하신 증상을 진료과별로 정리했어요. 병원 방문이나 검진 때 참고하세요.</p>
-
-    <div style="display:flex; gap:10px; margin-bottom:16px;">
-        <button onclick="window.print()" class="btn-custom">🖨️ 인쇄 / PDF 저장</button>
-        <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="background:var(--text-sub);">뒤로가기</button>
-    </div>
+<section id="health-screen" class="screen">
+    <header>
+        <h1 class="page-title">건강 기록</h1>
+        <div class="no-print" style="display:flex; gap:8px;">
+            <button onclick="window.print()" class="btn-custom">🖨️ 인쇄 / PDF 저장</button>
+        </div>
+    </header>
+    <p class="page-desc">AI 상담에서 말씀하신 증상을 PGHD 요약 리포트로 정리했어요. 병원에 가실 때 보여 주세요.</p>
 
     <div id="healthReportArea"></div>
 </section>
-<section id="settings-screen" class="screen" style="padding: 30px;">
-    <h2>⚙️ 설정</h2>
+<section id="settings-screen" class="screen">
+    <header>
+        <h1 class="page-title">설정</h1>
+    </header>
     <div class="card" style="max-width:400px;">
-        <p id="settingsUsername" style="color:var(--text-sub);"></p>
-        <button onclick="logout()" class="btn-danger" style="width:100%; padding:10px; font-size:14px;">로그아웃</button>
+        <p id="settingsUsername" style="color:var(--text-sub); margin-top:0;"></p>
+        <button onclick="logout()" class="btn-custom" style="width:100%; background:var(--danger);">로그아웃</button>
     </div>
-    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
 </section>
-<section id="auth-screen" class="screen active" style="padding: 60px 20px;">
+<section id="auth-screen" class="screen active" style="padding: 80px 20px;">
     <div class="card" style="max-width:380px; margin:0 auto;">
-        <img src="assets/mascot/hero-wave.png" alt="모아리" style="display:block; width:110px; margin:0 auto 10px;">
-        <h2 style="text-align:center;">로그인 / 회원가입</h2>
-        <p style="color:var(--text-sub); font-size:14px; margin-top:-10px;">고령자 AI 케어에 오신 것을 환영합니다.</p>
+        <h2 style="text-align:center; font-size:22px;">💙 AI 케어</h2>
+        <p style="color:var(--text-sub); font-size:15px; text-align:center; margin-top:-6px;">고령자 AI 케어에 오신 것을 환영합니다.</p>
         <div style="display:flex; flex-direction:column; gap:10px; margin-top:20px;">
-            <input id="authName" placeholder="이름 (회원가입 시에만 입력)" style="padding:10px;">
-            <input id="authUsername" placeholder="아이디 (영문/숫자)" style="padding:10px;">
-            <input id="authPassword" type="password" placeholder="비밀번호 (6자 이상)" style="padding:10px;">
+            <input id="authName" placeholder="이름 (회원가입 시에만 입력)" style="padding:12px;">
+            <input id="authUsername" placeholder="아이디 (영문/숫자)" style="padding:12px;">
+            <input id="authPassword" type="password" placeholder="비밀번호 (6자 이상)" style="padding:12px;">
             <button onclick="signIn()" class="btn-custom">로그인</button>
-            <button onclick="signUp()" class="btn-custom" style="background:var(--accent-color);">회원가입</button>
-            <p id="authError" style="color:#ff7676; font-size:13px; min-height:18px;"></p>
+            <button onclick="signUp()" class="btn-custom btn-ghost">회원가입</button>
+            <p id="authError" style="color:var(--unknown); font-size:14px; min-height:18px; margin:0;"></p>
         </div>
     </div>
 </section>
@@ -417,17 +441,17 @@ function setToken(token){
     else localStorage.removeItem(AUTH_TOKEN_KEY);
 }
 
-// path, { method, body, isForm } -> body는 JSON 객체(기본) 또는 FormData(isForm:true)
-async function apiFetch(path, { method = "GET", body, isForm = false } = {}){
+// path, { method, body } -> body는 JSON 객체
+async function apiFetch(path, { method = "GET", body } = {}){
     const headers = {};
     const token = getToken();
     if(token) headers["Authorization"] = `Bearer ${token}`;
-    if(body && !isForm) headers["Content-Type"] = "application/json";
+    if(body) headers["Content-Type"] = "application/json";
 
     const res = await fetch(`${API_BASE}${path}`, {
         method,
         headers,
-        body: body ? (isForm ? body : JSON.stringify(body)) : undefined,
+        body: body ? JSON.stringify(body) : undefined,
     });
 
     const data = await res.json().catch(() => ({}));
@@ -443,7 +467,6 @@ async function signUp(){
     const username = document.getElementById("authUsername").value.trim();
     const password = document.getElementById("authPassword").value;
     const errEl = document.getElementById("authError");
-    errEl.style.color = "#ff7676";
     errEl.textContent = "";
 
     if(!name || !username || !password){
@@ -465,7 +488,6 @@ async function signIn(){
     const username = document.getElementById("authUsername").value.trim();
     const password = document.getElementById("authPassword").value;
     const errEl = document.getElementById("authError");
-    errEl.style.color = "#ff7676";
     errEl.textContent = "";
 
     try{
@@ -535,7 +557,8 @@ function voiceInput(){
 function speak(text){
     speechSynthesis.cancel();
 
-    const utter = new SpeechSynthesisUtterance(text);
+    // ①②③④ 번호는 읽지 않도록 빼고 읽어줌
+    const utter = new SpeechSynthesisUtterance(text.replace(/[①②③④]/g, ""));
     utter.lang = "ko-KR";
     utter.rate = 1;
     utter.pitch = 1;
@@ -546,8 +569,14 @@ function speak(text){
 /* ======================
    🤖 AI 채팅
 ====================== */
+function removeChatEmpty(){
+    const empty = document.querySelector("#chat .chat-empty");
+    if(empty) empty.remove();
+}
+
 function add(type, text){
     const chat = document.getElementById("chat");
+    removeChatEmpty();
 
     const div = document.createElement("div");
     div.className = type;
@@ -624,105 +653,91 @@ async function ask(){
 }
 
 /* ======================
-   🩺 건강 기록
+   🩺 건강 기록 (PGHD 요약 리포트)
 ====================== */
+// 서버 REPORT_FIELDS와 같은 순서
+const REPORT_LABELS = [
+    ["expression", "본인 표현"],
+    ["onset", "시작"],
+    ["frequency", "빈도"],
+    ["aggravating", "악화 상황"],
+    ["impact", "생활 영향"],
+    ["comparison", "이전과 비교"],
+    ["medication", "복용 약"],
+];
+
+function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 async function openHealthScreen(){
     showScreen("health-screen");
 
     const area = document.getElementById("healthReportArea");
-    area.innerHTML = '<p style="color:var(--text-sub);">불러오는 중...</p>';
+    area.innerHTML = '<p class="report-empty">불러오는 중...</p>';
 
     try{
-        const { logs } = await apiFetch("/health-logs");
-        renderHealthReport(logs);
+        const { reports } = await apiFetch("/health-reports");
+        renderHealthReports(reports);
     }catch(err){
-        area.innerHTML = `<p style="color:#c0392b;">불러오지 못했습니다: ${err.message}</p>`;
+        area.innerHTML = `<p class="report-empty" style="color:var(--unknown);">불러오지 못했습니다: ${escapeHtml(err.message)}</p>`;
     }
 }
 
-function renderHealthReport(logs){
+function renderHealthReports(reports){
     const area = document.getElementById("healthReportArea");
 
-    if(!logs || logs.length === 0){
-        area.innerHTML = '<p style="color:var(--text-sub);">아직 기록된 증상이 없어요. AI 상담에서 아픈 곳을 말씀해주시면 여기에 정리돼요.</p>';
+    if(!reports || reports.length === 0){
+        area.innerHTML = '<p class="report-empty">아직 기록된 증상이 없어요.<br>AI 상담에서 불편한 곳을 말씀해 주시면 여기에 정리돼요.</p>';
         return;
     }
 
-    // 진료과별로 묶기
-    const byDept = {};
-    for(const log of logs){
-        const dept = log.department || "기타";
-        if(!byDept[dept]) byDept[dept] = [];
-        byDept[dept].push(log);
-    }
-
-    area.innerHTML = "";
-
-    for(const dept of Object.keys(byDept)){
-        const section = document.createElement("div");
-        section.className = "card";
-        section.style.marginBottom = "20px";
-
-        const heading = document.createElement("h2");
-        heading.style.fontSize = "17px";
-        heading.textContent = `🏥 ${dept}`;
-        section.appendChild(heading);
-
-        const table = document.createElement("table");
-        table.className = "post-table";
-        table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>날짜</th>
-                    <th>말씀하신 내용</th>
-                    <th>증상</th>
-                    <th>추정 병명</th>
-                    <th class="no-print">관리</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `;
-
-        const tbody = table.querySelector("tbody");
-        for(const log of byDept[dept]){
-            const tr = document.createElement("tr");
-
-            const dateTd = document.createElement("td");
-            dateTd.textContent = (log.created_at || "").slice(0, 16).replace("T", " ");
-            tr.appendChild(dateTd);
-
-            const msgTd = document.createElement("td");
-            msgTd.textContent = log.message;
-            tr.appendChild(msgTd);
-
-            const symptomTd = document.createElement("td");
-            symptomTd.textContent = log.symptom || "-";
-            tr.appendChild(symptomTd);
-
-            const condTd = document.createElement("td");
-            condTd.textContent = log.possible_condition || "-";
-            tr.appendChild(condTd);
-
-            const manageTd = document.createElement("td");
-            manageTd.className = "no-print";
-            const delBtn = document.createElement("button");
-            delBtn.textContent = "삭제";
-            delBtn.className = "btn-danger";
-            delBtn.onclick = () => deleteHealthLog(log.id);
-            manageTd.appendChild(delBtn);
-            tr.appendChild(manageTd);
-
-            tbody.appendChild(tr);
-        }
-
-        section.appendChild(table);
-        area.appendChild(section);
-    }
+    area.innerHTML = `<div class="report-list">${reports.map(renderReport).join("")}</div>`;
 }
 
-async function deleteHealthLog(id){
+function renderReport(report){
+    const rows = REPORT_LABELS.map(([key, label]) => {
+        const field = report.fields[key];
+        if(!field){
+            return `
+                <div class="report-row">
+                    <span class="report-label">${label}</span>
+                    <span class="report-value unknown">미확인</span>
+                    <span></span>
+                </div>`;
+        }
+
+        const value = key === "expression" ? `“${field.value.replace(/^["“”']+|["“”']+$/g, "")}”` : field.value;
+        const isGuardian = field.source === "보호자";
+
+        return `
+            <div class="report-row">
+                <span class="report-label">${label}</span>
+                <span class="report-value">${escapeHtml(value)}</span>
+                <span class="badge${isGuardian ? " guardian" : ""}">${isGuardian ? "보호자" : "본인"}</span>
+            </div>`;
+    }).join("");
+
+    const updated = (report.updated_at || "").slice(0, 10);
+
+    return `
+        <article class="report">
+            <div class="report-head">
+                <div>
+                    <h2 class="report-title">PGHD 요약 리포트</h2>
+                    <div class="report-meta">${escapeHtml(report.category)} · ${escapeHtml(report.symptom)} · 대화 ${report.conversation_count}회 누적</div>
+                </div>
+                <button class="btn-danger no-print" onclick="deleteHealthReport(${report.id})">삭제</button>
+            </div>
+            ${rows}
+            <div class="report-meta" style="margin-top:12px; text-align:right;">최근 기록 ${updated}</div>
+        </article>`;
+}
+
+async function deleteHealthReport(id){
+    if(!confirm("이 리포트를 삭제할까요?")) return;
     try{
-        await apiFetch(`/health-logs/${id}`, { method: "DELETE" });
+        await apiFetch(`/health-reports/${id}`, { method: "DELETE" });
         openHealthScreen();
     }catch(err){
         alert("삭제하지 못했습니다: " + err.message);
@@ -732,6 +747,7 @@ async function deleteHealthLog(id){
 function showScreen(screenId){
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(screenId).classList.add('active');
+    document.querySelectorAll('.menu-list a').forEach(a => a.classList.toggle('active', a.dataset.screen === screenId));
 }
 
 /* ======================
