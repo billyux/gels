@@ -119,25 +119,10 @@
         display: flex; align-items: center; gap: 15px;
     }
     .top-profile span { font-size: 14px; }
-    .app-check-btn {
-        background: var(--accent-color);
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 12px;
-        cursor: pointer;
-    }
 
     /* ----------------------------------
        카드 디자인 (전면 수정)
     ---------------------------------- */
-    .grid-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-    }
-
     .card {
         background: var(--card-bg);
         padding: 25px;
@@ -155,69 +140,6 @@
     /* ----------------------------------
        개별 컴포넌트 스타일
     ---------------------------------- */
-    /* 출석 달력 스타일 */
-    .calendar-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 5px;
-        text-align: center;
-    }
-
-    .calendar-table th {
-        font-size: 12px; color: var(--text-sub); font-weight: normal;
-        padding-bottom: 10px;
-    }
-
-    .calendar-table td {
-        width: 35px; height: 35px;
-        border-radius: 50%;
-        font-size: 14px;
-        position: relative;
-    }
-
-    /* 체크된 날짜 스타일 (이미지 기준) */
-    .calendar-table td.checked {
-        background: #e9f5e1; /* 연한 연두색 배경 */
-        color: var(--primary-color);
-        font-weight: bold;
-    }
-
-    .calendar-table td.checked::after {
-        content: '✔';
-        position: absolute;
-        font-size: 10px;
-        top: 2px; right: 2px;
-        color: var(--primary-color);
-    }
-
-    .calendar-table td.today {
-        border: 2px solid var(--primary-color);
-    }
-
-    /* 물 마시기 달력: 목표 미달 진행중 표시 */
-    .calendar-table td.partial {
-        background: #fff3d6;
-        color: #b8860b;
-        font-weight: bold;
-    }
-
-    .cup-dot {
-        width: 20px; height: 20px;
-        border-radius: 50%;
-        border: 2px solid var(--border-color);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 10px;
-        flex: none;
-    }
-
-    .cup-dot.filled {
-        background: var(--primary-color);
-        border-color: var(--primary-color);
-        color: white;
-    }
-
     /* 버튼 스타일 수정 */
     .btn-custom {
         background: var(--primary-color);
@@ -342,10 +264,6 @@
 
     .post-table tr:hover td { background: #f9f9f9; }
 
-    /* 반응형 (간단하게) */
-    @media (max-width: 1000px) {
-        .grid-container { grid-template-columns: 1fr; }
-    }
     .screen { display: none; flex: 1; min-width: 0; box-sizing: border-box; }
 .screen.active { display: block; }
 @media print {
@@ -353,87 +271,6 @@
     #health-screen.active { display: block !important; }
     body, main, .screen { background: #fff !important; }
 }
-.contents
-{
-    height:800px;
-    width:1000px;
-    overflow-y:auto;
-    overflow-x:hidden;
-
-    display:flex;
-    flex-direction:column;
-
-    background:#f5f7fb;
-    border-radius:15px;
-    padding:15px;
-}
-
-    /* 게시글 작성/읽기 모달 (메모장 스타일) */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.45);
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    .modal-overlay.active { display: flex; }
-
-    .modal-box {
-        background: var(--card-bg);
-        border-radius: 15px;
-        padding: 25px;
-        width: 100%;
-        max-width: 500px;
-        max-height: 85vh;
-        overflow-y: auto;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-        box-sizing: border-box;
-    }
-
-    .modal-box h2 { margin-top: 0; }
-
-    .modal-box input[type="text"] {
-        width: 100%;
-        padding: 10px;
-        box-sizing: border-box;
-        margin-bottom: 10px;
-    }
-
-    #writeContent {
-        width: 100%;
-        min-height: 220px;
-        padding: 10px;
-        box-sizing: border-box;
-        resize: vertical;
-        font-size: 14px;
-        line-height: 1.6;
-    }
-
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-        margin-top: 15px;
-    }
-
-    .read-content {
-        white-space: pre-wrap;
-        word-break: break-word;
-        line-height: 1.7;
-        font-size: 15px;
-        color: var(--text-main);
-    }
-
-    .read-image, .write-image-preview {
-        max-width: 100%;
-        border-radius: 10px;
-        margin: 10px 0;
-    }
 </style>
 </head>
 <body>
@@ -471,11 +308,7 @@
         </div>
     </div>
     <div class="menu-list">
-        <a href="#" onclick="showScreen('dashboard-screen')">대시보드</a>
-          <a href="#" onclick="showScreen('dashboard-screen')">출석체크</a>
-         <a href="#" onclick="showScreen('dashboard-screen')">AI 상담 도우미</a>
-        <a href="#" onclick="showScreen('dashboard-screen')">커뮤니티 게시판</a>
-        <a href="#" onclick="openTempScreen()">🌡️ 온도 알림</a>
+        <a href="#" onclick="showScreen('dashboard-screen')">🤖 AI 상담</a>
         <a href="#" onclick="openHealthScreen()">🩺 건강 기록</a>
         <a href="#" onclick="showScreen('settings-screen')">설정</a>
     </div>
@@ -484,9 +317,8 @@
 <main id="dashboard-screen" class="screen" style="padding: 30px;">
 
     <header>
-        <h1 class="page-title">사용자 통합 대시보드</h1>
+        <h1 class="page-title">AI 상담</h1>
         <div class="top-profile">
-            <button class="app-check-btn">출석 확인! App Check!</button>
             <div class="avatar">
             <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="50" cy="50" r="50" fill="#fdf8f0"/>
@@ -516,37 +348,6 @@
         </div>
     </header>
 
-    <div class="grid-container">
-        <section class="card">
-            <h2>출석체크</h2>
-            <div style="display:flex; align-items:center; gap:16px;">
-                <img src="assets/mascot/attendance-pose.png" alt="모아리" style="height:160px; flex:none;">
-                <button onclick="attend()" class="btn-custom">출석하기</button>
-            </div>
-            <p id="attText" style="font-size:14px; color:var(--text-sub); margin-top:10px;"></p>
-            <img id="attMascot" src="assets/mascot/fighting.png" alt="모아리" style="display:none; width:90px; margin-top:8px;">
-
-            <table class="calendar-table">
-                <thead>
-                    <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
-                </thead>
-                <tbody id="calendarBody">
-                    <tr>
-                        <td></td><td></td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td>
-                    </tr>
-                    <tr>
-                        <td>6</td><td>7</td><td>8</td><td class="checked today">9</td><td class="checked">10</td><td>11</td><td>12</td>
-                    </tr>
-                    <tr>
-                        <td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td>
-                    </tr>
-                    <tr>
-                        <td colspan="7" style="color:var(--text-sub); font-size:12px; padding-top:15px;">* 예시 화면입니다.</td>
-                    </tr>
-                </tbody>
-            </table>
-        </section>
-
         <section class="card">
             <h2>AI 상담</h2>
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -563,77 +364,8 @@
                 <button onclick="ask()" class="btn-custom">전송</button>
             </div>
         </section>
-    </div>
-
-    <section class="card" style="margin-top:20px;">
-        <div style="display:flex; align-items:center; gap:14px;">
-            <img src="assets/mascot/board-pose.png" alt="모아리" style="height:160px;">
-            <h2 style="margin:0;">커뮤니티 게시판</h2>
-        </div>
-        <div style="margin:15px 0;">
-            <button onclick="openWriteModal()" class="btn-custom">✏️ 게시글 작성</button>
-        </div>
-
-        <table class="post-table">
-            <thead>
-                <tr>
-                    <th>번호</th>
-                    <th>제목</th>
-                    <th>작성자</th>
-                    <th>조회수</th>
-                    <th>작성일</th>
-                    <th>관리</th>
-                </tr>
-            </thead>
-            <tbody id="board">
-                </tbody>
-        </table>
-    </section>
-
 
 </main>
-<section id="temp-screen" class="screen" style="padding: 30px;">
-    <h2>🌡️ 온도 알림</h2>
-    <p id="tempStatus" style="color:var(--text-sub); font-size:14px; margin-top:-10px;">불러오는 중...</p>
-
-    <div class="card" style="max-width:420px; display:flex; align-items:center; gap:24px;">
-        <img src="assets/mascot/tea.png" alt="모아리" style="width:90px; flex:none;">
-        <div>
-            <div style="font-size:13px; color:var(--text-sub);">부산진구 현재 기온</div>
-            <div id="tempReading" style="font-size:46px; font-weight:700; color:var(--accent-color); line-height:1;">--°C</div>
-            <span id="tempChip" style="display:inline-block; margin-top:10px; font-size:12.5px; font-weight:700; padding:4px 10px; border-radius:999px;"></span>
-        </div>
-    </div>
-
-    <div class="card" style="max-width:420px; margin-top:20px;">
-        <p id="tempMessage" style="font-size:14.5px; margin:0 0 16px;"></p>
-
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
-            <span style="font-size:14px; color:var(--text-sub);">오늘 마신 물</span>
-            <span id="waterTodayCount" style="font-size:20px; font-weight:700; color:var(--primary-color);">0 / 8잔</span>
-        </div>
-        <div id="waterCupDots" style="display:flex; gap:6px; margin-bottom:16px;"></div>
-
-        <button onclick="drinkWater()" class="btn-custom">물 한 잔 마셨어요 👍</button>
-        <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
-            <img id="waterMascot" src="assets/mascot/thanks.png" alt="모아리" style="display:none; width:70px;">
-            <p id="waterConfirmMsg" style="font-size:13px; color:var(--primary-color); margin:0; min-height:18px;"></p>
-        </div>
-    </div>
-
-    <div class="card" style="max-width:420px; margin-top:20px;">
-        <h2 style="font-size:16px;">📅 이번 달 물 마시기 기록</h2>
-        <table class="calendar-table">
-            <thead>
-                <tr><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th><th>일</th></tr>
-            </thead>
-            <tbody id="waterCalendarBody"></tbody>
-        </table>
-        <p style="font-size:12px; color:var(--text-sub); margin-top:10px;">숫자는 그날 마신 물잔 수예요. 목표(8잔)를 채우면 초록색으로 표시돼요.</p>
-    </div>
-
-    <button onclick="showScreen('dashboard-screen')" class="btn-custom" style="margin-top:15px;">뒤로가기</button>
-</section>
 <section id="health-screen" class="screen" style="padding: 30px;">
     <h2>🩺 건강 기록</h2>
     <p style="font-size:14px; color:var(--text-sub); margin-top:-10px;">AI 상담 중 말씀하신 증상을 진료과별로 정리했어요. 병원 방문이나 검진 때 참고하세요.</p>
@@ -669,48 +401,12 @@
     </div>
 </section>
 
-<div id="writeModal" class="modal-overlay" onclick="if(event.target===this) closeWriteModal()">
-    <div class="modal-box">
-        <h2>✏️ 새 게시글</h2>
-        <input id="writeTitle" type="text" placeholder="제목을 입력하세요">
-        <textarea id="writeContent" placeholder="내용을 입력하세요"></textarea>
-        <div style="margin-top:10px;">
-            <label style="font-size:13px; color:var(--text-sub);">이미지 첨부 (선택)</label><br>
-            <input id="writeImage" type="file" accept="image/*" style="margin-top:5px;" onchange="previewWriteImage()">
-            <img id="writeImagePreview" class="write-image-preview" style="display:none;">
-        </div>
-        <p id="writeError" style="color:#ff7676; font-size:13px; min-height:18px;"></p>
-        <div class="modal-actions">
-            <button onclick="closeWriteModal()" class="btn-danger" style="margin-bottom:0;">취소</button>
-            <button onclick="submitPost()" class="btn-custom">등록</button>
-        </div>
-    </div>
-</div>
-
-<div id="readModal" class="modal-overlay" onclick="if(event.target===this) closeReadModal()">
-    <div class="modal-box">
-        <h2 id="readTitle"></h2>
-        <p id="readMeta" style="color:var(--text-sub); font-size:13px;"></p>
-        <img id="readImage" class="read-image" style="display:none;">
-        <p id="readContent" class="read-content"></p>
-        <div class="modal-actions">
-            <button onclick="closeReadModal()" class="btn-custom">닫기</button>
-        </div>
-    </div>
-</div>
-
 <script>
 /* ======================
    🔌 백엔드 API 초기화
 ====================== */
 const API_BASE = "https://gels-mpsf.onrender.com/api";
-const API_ORIGIN = API_BASE.replace(/\/api$/, "");
 const AUTH_TOKEN_KEY = "gels_token";
-
-function resolveImageUrl(url){
-    if(!url) return url;
-    return url.startsWith("/") ? `${API_ORIGIN}${url}` : url;
-}
 
 function getToken(){
     return localStorage.getItem(AUTH_TOKEN_KEY);
@@ -803,93 +499,6 @@ async function enterApp(){
 
     document.body.classList.add("authed");
     showScreen("dashboard-screen");
-
-    await createCalendar();
-    await loadBoard();
-}
-
-/* ======================
-   📅 달력 생성
-====================== */
-async function createCalendar(){
-
-    const body = document.getElementById("calendarBody");
-    body.innerHTML = "";
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth(); // 0-indexed
-    const todayDate = now.getDate();
-
-    // getDay()는 일요일=0 기준인데, 표 헤더는 월~일 순서라 월요일=0으로 맞춰줘야 함
-    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
-    const lastDate = new Date(year, month + 1, 0).getDate();
-
-    const pad = (n) => String(n).padStart(2, "0");
-    const monthStart = `${year}-${pad(month + 1)}-01`;
-    const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
-
-    let rows = [];
-    try{
-        ({ rows } = await apiFetch(`/attendance?start=${monthStart}&end=${monthEnd}`));
-    }catch(error){
-        console.error(error);
-    }
-
-    const checkedDays = new Set((rows || []).map(r => Number(r.attended_on.split("-")[2])));
-
-    let tr = document.createElement("tr");
-
-    // 앞 빈칸
-    for(let i=0;i<firstDay;i++){
-        tr.appendChild(document.createElement("td"));
-    }
-
-    for(let day=1;day<=lastDate;day++){
-
-        const td = document.createElement("td");
-        td.textContent = day;
-
-        // 오늘 표시
-        if(day === todayDate){
-            td.classList.add("today");
-        }
-
-        if(checkedDays.has(day)){
-            td.classList.add("checked");
-        }
-
-        tr.appendChild(td);
-
-        if((firstDay + day) % 7 === 0){
-            body.appendChild(tr);
-            tr = document.createElement("tr");
-        }
-    }
-
-    body.appendChild(tr);
-}
-
-/* ======================
-   ✅ 출석체크
-====================== */
-async function attend(){
-
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    const attendedOn = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-
-    try{
-        await apiFetch("/attendance", { method: "POST", body: { attended_on: attendedOn } });
-    }catch(error){
-        document.getElementById("attText").innerText = "출석 처리 중 오류: " + error.message;
-        return;
-    }
-
-    document.getElementById("attText").innerText = "오늘 출석 완료 👍";
-    document.getElementById("attMascot").style.display = "block";
-
-    await createCalendar(); // 다시 그려서 반영
 }
 
 /* ======================
@@ -1013,299 +622,6 @@ async function ask(){
         add("ai", "❌ 오류: " + err.message);
     }
 }
-
-/* ======================
-   📝 게시판 (작성/읽기 모달)
-====================== */
-function openWriteModal(){
-    document.getElementById("writeTitle").value = "";
-    document.getElementById("writeContent").value = "";
-    document.getElementById("writeImage").value = "";
-    document.getElementById("writeImagePreview").style.display = "none";
-    document.getElementById("writeError").textContent = "";
-    document.getElementById("writeModal").classList.add("active");
-}
-
-function closeWriteModal(){
-    document.getElementById("writeModal").classList.remove("active");
-}
-
-function previewWriteImage(){
-    const file = document.getElementById("writeImage").files[0];
-    const preview = document.getElementById("writeImagePreview");
-    if(!file){
-        preview.style.display = "none";
-        return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        preview.src = e.target.result;
-        preview.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-}
-
-async function submitPost(){
-
-    const title = document.getElementById("writeTitle").value.trim();
-    const content = document.getElementById("writeContent").value.trim();
-    const file = document.getElementById("writeImage").files[0];
-    const errEl = document.getElementById("writeError");
-    errEl.textContent = "";
-
-    if(!title || !content){
-        errEl.textContent = "제목과 내용을 입력하세요.";
-        return;
-    }
-
-    const form = new FormData();
-    form.append("title", title);
-    form.append("content", content);
-    if(file) form.append("image", file);
-
-    try{
-        await apiFetch("/posts", { method: "POST", body: form, isForm: true });
-    }catch(error){
-        errEl.textContent = "게시글 작성 실패: " + error.message;
-        return;
-    }
-
-    closeWriteModal();
-    await loadBoard();
-}
-
-async function loadBoard(){
-
-    const board = document.getElementById("board");
-    board.innerHTML = "";
-
-    let posts;
-    try{
-        ({ posts } = await apiFetch("/posts"));
-    }catch(error){
-        console.error(error);
-        return;
-    }
-
-    (posts || []).forEach((p, index) => {
-
-        const tr = document.createElement("tr");
-        const dateStr = new Date(p.created_at).toLocaleDateString();
-
-        tr.innerHTML = `
-            <td>${posts.length - index}</td>
-            <td style="cursor:pointer;color:#2b6cb0;font-weight:bold" onclick="openPost(${p.id})">${p.title}${p.image_url ? " 🖼️" : ""}</td>
-            <td>${p.display_name || "익명"}</td>
-            <td>${p.views}</td>
-            <td>${dateStr}</td>
-            <td><button class="btn-danger" onclick="deletePost(${p.id})">삭제</button></td>
-        `;
-
-        board.appendChild(tr);
-    });
-}
-
-async function openPost(id){
-
-    let post;
-    try{
-        ({ post } = await apiFetch(`/posts/${id}`));
-    }catch(error){
-        console.error(error);
-        return;
-    }
-
-    document.getElementById("readTitle").textContent = post.title;
-    document.getElementById("readMeta").textContent = `작성일: ${new Date(post.created_at).toLocaleDateString()}`;
-    document.getElementById("readContent").textContent = post.content;
-
-    const readImage = document.getElementById("readImage");
-    if(post.image_url){
-        readImage.src = resolveImageUrl(post.image_url);
-        readImage.style.display = "block";
-    }else{
-        readImage.style.display = "none";
-    }
-
-    document.getElementById("readModal").classList.add("active");
-
-    await loadBoard();
-}
-
-function closeReadModal(){
-    document.getElementById("readModal").classList.remove("active");
-}
-
-async function deletePost(id){
-    try{
-        await apiFetch(`/posts/${id}`, { method: "DELETE" });
-    }catch(error){
-        alert("삭제 실패(본인 글만 삭제할 수 있습니다): " + error.message);
-        return;
-    }
-    await loadBoard();
-}
-
-/* ======================
-   🌡️ 온도 알림
-====================== */
-async function openTempScreen(){
-    showScreen("temp-screen");
-
-    const statusEl = document.getElementById("tempStatus");
-    const readingEl = document.getElementById("tempReading");
-    const chipEl = document.getElementById("tempChip");
-    const msgEl = document.getElementById("tempMessage");
-
-    statusEl.textContent = "불러오는 중...";
-
-    try{
-        // Open-Meteo: 키 없이 쓸 수 있는 공개 기상 API (부산진구 좌표 기준)
-        const res = await fetch("https://api.open-meteo.com/v1/forecast?latitude=35.1626&longitude=129.0530&current=temperature_2m&timezone=Asia%2FSeoul");
-        const data = await res.json();
-        const temp = data.current.temperature_2m;
-
-        readingEl.textContent = `${temp}°C`;
-
-        let level, color, bg, message;
-
-        if(temp >= 33){
-            level = "위험 단계"; color = "#c0392b"; bg = "#fbe0da";
-            message = `기온이 ${temp}°C까지 올랐어요. 지금 꼭 물 한 잔 마셔주세요!`;
-        }else if(temp >= 28){
-            level = "주의 단계"; color = "#d97a34"; bg = "#fbe9d6";
-            message = `기온이 ${temp}°C예요. 물을 자주 마시는 게 좋아요.`;
-        }else{
-            level = "좋음"; color = "var(--primary-color)"; bg = "#e9f5e1";
-            message = `기온이 ${temp}°C로 괜찮은 편이에요. 그래도 물은 꾸준히 마셔주세요.`;
-        }
-
-        chipEl.textContent = level;
-        chipEl.style.color = color;
-        chipEl.style.background = bg;
-        msgEl.textContent = message;
-
-        document.getElementById("waterConfirmMsg").textContent = "";
-        statusEl.textContent = "부산진구 실시간 기온 (기상 데이터 제공: Open-Meteo)";
-    }catch(err){
-        statusEl.textContent = "기온 정보를 불러오지 못했습니다: " + err.message;
-    }
-
-    await loadWaterToday();
-    await loadWaterCalendar();
-}
-
-/* ======================
-   💧 물 마시기 기록
-====================== */
-const WATER_GOAL = 8;
-
-function todayStr(){
-    const now = new Date();
-    const pad = (n) => String(n).padStart(2, "0");
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-}
-
-function renderCupDots(cups){
-    const wrap = document.getElementById("waterCupDots");
-    wrap.innerHTML = "";
-
-    for(let i = 1; i <= WATER_GOAL; i++){
-        const dot = document.createElement("div");
-        dot.className = "cup-dot" + (i <= cups ? " filled" : "");
-        dot.textContent = i <= cups ? "💧" : "";
-        wrap.appendChild(dot);
-    }
-}
-
-async function loadWaterToday(){
-    let cups = 0;
-    try{
-        ({ cups } = await apiFetch("/water-log/today"));
-    }catch(error){
-        console.error(error);
-    }
-
-    document.getElementById("waterTodayCount").textContent = `${cups} / ${WATER_GOAL}잔`;
-    renderCupDots(cups);
-}
-
-async function drinkWater(){
-    const msgEl = document.getElementById("waterConfirmMsg");
-
-    // DB에서 원자적으로 +1 처리 (읽고-다시-쓰는 방식은 빠르게 연속 클릭할 때 카운트가 씹힐 수 있음)
-    try{
-        await apiFetch("/water-log/increment", { method: "POST", body: { logged_on: todayStr() } });
-    }catch(error){
-        msgEl.textContent = "기록 실패: " + error.message;
-        return;
-    }
-
-    msgEl.textContent = "오늘 물 마신 걸 기록했어요 👍";
-    document.getElementById("waterMascot").style.display = "block";
-    await loadWaterToday();
-    await loadWaterCalendar();
-}
-
-async function loadWaterCalendar(){
-    const body = document.getElementById("waterCalendarBody");
-    body.innerHTML = "";
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const todayDate = now.getDate();
-
-    // getDay()는 일요일=0 기준인데, 표 헤더는 월~일 순서라 월요일=0으로 맞춰줘야 함
-    const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
-    const lastDate = new Date(year, month + 1, 0).getDate();
-
-    const pad = (n) => String(n).padStart(2, "0");
-    const monthStart = `${year}-${pad(month + 1)}-01`;
-    const monthEnd = `${year}-${pad(month + 1)}-${pad(lastDate)}`;
-
-    let rows = [];
-    try{
-        ({ rows } = await apiFetch(`/water-log?start=${monthStart}&end=${monthEnd}`));
-    }catch(error){
-        console.error(error);
-    }
-
-    const cupsByDay = {};
-    (rows || []).forEach((r) => {
-        cupsByDay[Number(r.logged_on.split("-")[2])] = r.cups;
-    });
-
-    let tr = document.createElement("tr");
-
-    for(let i = 0; i < firstDay; i++){
-        tr.appendChild(document.createElement("td"));
-    }
-
-    for(let day = 1; day <= lastDate; day++){
-        const td = document.createElement("td");
-        const cups = cupsByDay[day] || 0;
-
-        td.textContent = cups > 0 ? `${day}(${cups})` : day;
-
-        if(day === todayDate) td.classList.add("today");
-        if(cups >= WATER_GOAL) td.classList.add("checked");
-        else if(cups > 0) td.classList.add("partial");
-
-        tr.appendChild(td);
-
-        if((firstDay + day) % 7 === 0){
-            body.appendChild(tr);
-            tr = document.createElement("tr");
-        }
-    }
-
-    body.appendChild(tr);
-}
-
-/* ======================
-   🖥️ 화면 전환
-====================== */
 
 /* ======================
    🩺 건강 기록

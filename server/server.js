@@ -1,10 +1,7 @@
 require("dotenv").config();
 
-const path = require("path");
-const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
-const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -17,25 +14,6 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-/* ======================
-   업로드 (게시글 이미지)
-====================== */
-const uploadsDir = path.join(__dirname, "uploads");
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-app.use("/uploads", express.static(uploadsDir));
-
-const storage = multer.diskStorage({
-  destination(req, file, cb) {
-    const userDir = path.join(uploadsDir, String(req.user.id));
-    fs.mkdirSync(userDir, { recursive: true });
-    cb(null, userDir);
-  },
-  filename(req, file, cb) {
-    cb(null, `${Date.now()}_${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
 
 /* ======================
    DB 헬퍼
@@ -134,160 +112,6 @@ app.get(
     const user = await getUserById(req.user.id);
     if (!user) return res.status(401).json({ error: "사용자를 찾을 수 없습니다." });
     res.json({ user });
-  })
-);
-
-/* ======================
-   출석
-====================== */
-app.get(
-  "/api/attendance",
-  requireAuth,
-  h(async (req, res) => {
-    const { start, end } = req.query;
-    const rows = await all(
-      "SELECT attended_on FROM attendance WHERE user_id = ? AND attended_on BETWEEN ? AND ?",
-      [req.user.id, start || "0000-01-01", end || "9999-12-31"]
-    );
-    res.json({ rows });
-  })
-);
-
-app.post(
-  "/api/attendance",
-  requireAuth,
-  h(async (req, res) => {
-    const attendedOn = (req.body && req.body.attended_on) || new Date().toISOString().slice(0, 10);
-    await run(
-      `INSERT INTO attendance (user_id, attended_on) VALUES (?, ?)
-       ON CONFLICT (user_id, attended_on) DO NOTHING`,
-      [req.user.id, attendedOn]
-    );
-    res.json({ ok: true, attended_on: attendedOn });
-  })
-);
-
-/* ======================
-   게시판
-====================== */
-app.get(
-  "/api/posts",
-  requireAuth,
-  h(async (req, res) => {
-    const posts = await all(
-      `SELECT posts.id, posts.title, posts.content, posts.image_url, posts.views,
-              posts.created_at, posts.user_id, users.display_name
-       FROM posts JOIN users ON users.id = posts.user_id
-       ORDER BY posts.created_at DESC, posts.id DESC`
-    );
-    res.json({ posts });
-  })
-);
-
-app.post(
-  "/api/posts",
-  requireAuth,
-  upload.single("image"),
-  h(async (req, res) => {
-    const { title, content } = req.body || {};
-    if (!title || !content) {
-      return res.status(400).json({ error: "제목과 내용을 입력하세요." });
-    }
-
-    const imageUrl = req.file ? `/uploads/${req.user.id}/${req.file.filename}` : null;
-
-    const info = await run(
-      "INSERT INTO posts (user_id, title, content, image_url) VALUES (?, ?, ?, ?)",
-      [req.user.id, title, content, imageUrl]
-    );
-
-    res.json({ id: Number(info.lastInsertRowid) });
-  })
-);
-
-app.get(
-  "/api/posts/:id",
-  requireAuth,
-  h(async (req, res) => {
-    const post = await get(
-      `SELECT posts.*, users.display_name FROM posts
-       JOIN users ON users.id = posts.user_id
-       WHERE posts.id = ?`,
-      [req.params.id]
-    );
-
-    if (!post) return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
-
-    await run("UPDATE posts SET views = views + 1 WHERE id = ?", [req.params.id]);
-    post.views += 1;
-
-    res.json({ post });
-  })
-);
-
-app.delete(
-  "/api/posts/:id",
-  requireAuth,
-  h(async (req, res) => {
-    const post = await get("SELECT user_id FROM posts WHERE id = ?", [req.params.id]);
-    if (!post) return res.status(404).json({ error: "게시글을 찾을 수 없습니다." });
-    if (post.user_id !== req.user.id) {
-      return res.status(403).json({ error: "본인 글만 삭제할 수 있습니다." });
-    }
-
-    await run("DELETE FROM posts WHERE id = ?", [req.params.id]);
-    res.json({ ok: true });
-  })
-);
-
-/* ======================
-   물 섭취 기록
-====================== */
-app.get(
-  "/api/water-log/today",
-  requireAuth,
-  h(async (req, res) => {
-    const today = new Date().toISOString().slice(0, 10);
-    const row = await get("SELECT cups FROM water_log WHERE user_id = ? AND logged_on = ?", [
-      req.user.id,
-      today,
-    ]);
-    res.json({ cups: row?.cups || 0 });
-  })
-);
-
-app.post(
-  "/api/water-log/increment",
-  requireAuth,
-  h(async (req, res) => {
-    const date = (req.body && req.body.logged_on) || new Date().toISOString().slice(0, 10);
-
-    await run(
-      `INSERT INTO water_log (user_id, logged_on, cups) VALUES (?, ?, 1)
-       ON CONFLICT (user_id, logged_on)
-       DO UPDATE SET cups = cups + 1, updated_at = datetime('now')`,
-      [req.user.id, date]
-    );
-
-    const row = await get("SELECT cups FROM water_log WHERE user_id = ? AND logged_on = ?", [
-      req.user.id,
-      date,
-    ]);
-
-    res.json({ cups: row.cups });
-  })
-);
-
-app.get(
-  "/api/water-log",
-  requireAuth,
-  h(async (req, res) => {
-    const { start, end } = req.query;
-    const rows = await all(
-      "SELECT logged_on, cups FROM water_log WHERE user_id = ? AND logged_on BETWEEN ? AND ?",
-      [req.user.id, start || "0000-01-01", end || "9999-12-31"]
-    );
-    res.json({ rows });
   })
 );
 
@@ -454,52 +278,6 @@ app.delete(
 
     await run("DELETE FROM health_logs WHERE id = ?", [req.params.id]);
     res.json({ ok: true });
-  })
-);
-
-/* ======================
-   무더위쉼터 (safekorea.go.kr 프록시)
-====================== */
-const SHELTER_SOURCE_URL =
-  "https://www.safekorea.go.kr/safekorea-kor/flsm/flsm/facilityDataList.do";
-
-app.get(
-  "/api/shelters",
-  requireAuth,
-  h(async (req, res) => {
-    const sggCd = req.query.sggCd || "26";
-
-    try {
-      const sourceRes = await fetch(SHELTER_SOURCE_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-          "X-Requested-With": "XMLHttpRequest",
-          "Accept": "application/json, text/javascript, */*; q=0.01",
-          "Referer":
-            "https://www.safekorea.go.kr/safekorea-kor/flsm/flsm/facilitiesSafteyMap.do?menuSn=2&baseMapNm=naver",
-        },
-        body: `tableNm=TFK_HTW_RSTR_TEMP&tableKorNm=${encodeURIComponent("무더위쉼터")}&sggCd=${sggCd}&page=1&size=3000`,
-      });
-
-      const data = await sourceRes.json();
-
-      const shelters = (data.mapList || [])
-        .filter((s) => s.la && s.lo)
-        .map((s) => ({
-          name: s.rstrNm,
-          address: s.rnDtlAdres,
-          lat: s.la,
-          lng: s.lo,
-          capacity: s.usePsblNmpr,
-          aircon: s.chckMatterAirconPosesAt === "Y",
-          nightOpen: s.chckMatterNightOpnAt === "Y",
-        }));
-
-      res.json({ shelters });
-    } catch (err) {
-      res.status(500).json({ error: String(err) });
-    }
   })
 );
 
