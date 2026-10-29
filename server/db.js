@@ -50,6 +50,14 @@ async function migrate() {
 
     CREATE INDEX IF NOT EXISTS health_reports_user_time_idx
       ON health_reports (user_id, updated_at);
+
+    -- 가입 직후 서베이로 받는 기저질환. 행이 있으면 서베이를 마친 것
+    CREATE TABLE IF NOT EXISTS health_profiles (
+      user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      conditions TEXT NOT NULL DEFAULT '[]',
+      other_conditions TEXT NOT NULL DEFAULT '',
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 }
 

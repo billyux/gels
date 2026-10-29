@@ -342,6 +342,59 @@
     }
 
     /* ----------------------------------
+       기저질환 서베이
+    ---------------------------------- */
+    .condition-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 10px;
+        margin: 18px 0;
+    }
+
+    .condition-option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--row-bg);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        padding: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.15s;
+    }
+
+    .condition-option:hover { background: var(--row-hover); }
+
+    .condition-option input {
+        width: 20px; height: 20px;
+        accent-color: var(--badge-hover);
+        flex: none;
+    }
+
+    .condition-option:has(input:checked) {
+        border-color: var(--badge-hover);
+        background: var(--row-hover);
+    }
+
+    .condition-option small {
+        display: block;
+        font-size: 12px;
+        font-weight: 400;
+        color: var(--text-sub);
+        margin-top: 2px;
+    }
+
+    .condition-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .condition-chips .badge { font-size: 14px; padding: 7px 14px; }
+
+    /* ----------------------------------
        화면 전환 / 인쇄
     ---------------------------------- */
     .screen { display: none; flex: 1; min-width: 0; box-sizing: border-box; padding: 32px; }
@@ -399,6 +452,14 @@
     </header>
     <p class="page-desc">AI 상담에서 말씀하신 증상을 PGHD 요약 리포트로 정리했어요. 병원에 가실 때 보여 주세요.</p>
 
+    <section class="report" style="margin-bottom:20px;">
+        <div class="report-head" style="margin-bottom:12px;">
+            <h2 class="report-title" style="margin:0;">앓고 있는 질환</h2>
+            <button class="btn-danger no-print" style="color:var(--text-sub); border-color:var(--border-color);" onclick="openSurvey()">수정</button>
+        </div>
+        <div id="profileConditions" class="condition-chips"></div>
+    </section>
+
     <div id="healthReportArea"></div>
 </section>
 <section id="settings-screen" class="screen">
@@ -407,7 +468,28 @@
     </header>
     <div class="card" style="max-width:400px;">
         <p id="settingsUsername" style="color:var(--text-sub); margin-top:0;"></p>
+        <button onclick="openSurvey()" class="btn-custom" style="width:100%; margin-bottom:10px;">앓고 있는 질환 수정</button>
         <button onclick="logout()" class="btn-custom" style="width:100%; background:var(--danger);">로그아웃</button>
+    </div>
+</section>
+<section id="survey-screen" class="screen">
+    <div class="card" style="max-width:760px; margin:0 auto;">
+        <h2 style="font-size:22px;">지금 앓고 계신 질환이 있나요?</h2>
+        <p style="color:var(--text-sub); font-size:15px; margin:-6px 0 0; line-height:1.6;">
+            해당하는 것을 모두 골라 주세요. AI 상담이 더 알맞게 답해 드리고, 건강 기록에도 함께 정리돼요.<br>
+            나중에 설정에서 언제든 바꿀 수 있어요.
+        </p>
+
+        <div id="conditionGrid" class="condition-grid"></div>
+
+        <label for="otherConditions" style="font-size:15px; font-weight:600;">그 밖의 질환 (있으면 적어 주세요)</label>
+        <input id="otherConditions" placeholder="예: 통풍, 전립선비대증" style="width:100%; box-sizing:border-box; padding:12px; margin-top:8px;">
+
+        <p id="surveyError" style="color:var(--unknown); font-size:14px; min-height:18px;"></p>
+        <div style="display:flex; justify-content:flex-end; gap:8px;">
+            <button id="surveySkipBtn" onclick="skipSurvey()" class="btn-custom btn-ghost">나중에 할게요</button>
+            <button onclick="saveSurvey()" class="btn-custom">저장하기</button>
+        </div>
     </div>
 </section>
 <section id="auth-screen" class="screen active" style="padding: 80px 20px;">
@@ -520,7 +602,114 @@ async function enterApp(){
     document.getElementById("settingsUsername").textContent = `로그인 아이디: ${user.username}`;
 
     document.body.classList.add("authed");
-    showScreen("dashboard-screen");
+
+    // 서베이를 아직 안 했으면(가입 직후 포함) 먼저 서베이로
+    let profile = null;
+    try{
+        ({ profile } = await apiFetch("/health-profile"));
+    }catch(error){
+        console.error(error);
+    }
+    healthProfile = profile;
+
+    if(profile) showScreen("dashboard-screen");
+    else openSurvey({ firstTime: true });
+}
+
+/* ======================
+   📋 기저질환 서베이
+====================== */
+const CONDITION_OPTIONS = [
+    ["고혈압", ""],
+    ["당뇨병", ""],
+    ["고지혈증", "콜레스테롤이 높음"],
+    ["관절염", "무릎·허리·손 관절"],
+    ["골다공증", ""],
+    ["심장 질환", "협심증·심근경색·부정맥"],
+    ["뇌졸중", "중풍"],
+    ["치매·기억력 저하", ""],
+    ["만성 폐 질환", "천식·만성폐쇄성폐질환"],
+    ["만성 콩팥병", "신장 질환"],
+    ["갑상선 질환", ""],
+    ["백내장·녹내장", ""],
+    ["난청", "귀가 잘 안 들림"],
+    ["우울증·불면증", ""],
+    ["암", "치료 중이거나 치료한 적 있음"],
+];
+const NO_CONDITION = "없음";
+
+let healthProfile = null;
+let surveyFirstTime = false;
+
+function openSurvey({ firstTime = false } = {}){
+    surveyFirstTime = firstTime;
+    const selected = new Set(healthProfile?.conditions || []);
+    // 이전에 "없음"으로 저장했으면 다시 열 때도 "없음"에 체크
+    if(healthProfile && selected.size === 0 && !healthProfile.other_conditions) selected.add(NO_CONDITION);
+
+    const options = [...CONDITION_OPTIONS, [NO_CONDITION, "앓고 있는 질환이 없어요"]];
+    document.getElementById("conditionGrid").innerHTML = options.map(([name, hint]) => `
+        <label class="condition-option">
+            <input type="checkbox" value="${escapeHtml(name)}" ${selected.has(name) ? "checked" : ""} onchange="onConditionChange(this)">
+            <span>${escapeHtml(name)}${hint ? `<small>${escapeHtml(hint)}</small>` : ""}</span>
+        </label>`).join("");
+
+    document.getElementById("otherConditions").value = healthProfile?.other_conditions || "";
+    document.getElementById("surveyError").textContent = "";
+    document.getElementById("surveySkipBtn").textContent = firstTime ? "나중에 할게요" : "취소";
+
+    showScreen("survey-screen");
+}
+
+// "없음"과 다른 질환은 함께 고를 수 없게 함
+function onConditionChange(input){
+    if(!input.checked) return;
+    document.querySelectorAll("#conditionGrid input").forEach((box) => {
+        if(box === input) return;
+        if(input.value === NO_CONDITION || box.value === NO_CONDITION) box.checked = false;
+    });
+}
+
+async function saveSurvey(){
+    const checked = [...document.querySelectorAll("#conditionGrid input:checked")].map((box) => box.value);
+    const other = document.getElementById("otherConditions").value.trim();
+    const errEl = document.getElementById("surveyError");
+
+    if(checked.length === 0 && !other){
+        errEl.textContent = "해당하는 것을 골라 주세요. 없으시면 \"없음\"을 골라 주세요.";
+        return;
+    }
+
+    try{
+        const { profile } = await apiFetch("/health-profile", {
+            method: "PUT",
+            body: { conditions: checked.filter((c) => c !== NO_CONDITION), other_conditions: other },
+        });
+        healthProfile = profile;
+    }catch(error){
+        errEl.textContent = "저장하지 못했습니다: " + error.message;
+        return;
+    }
+
+    if(surveyFirstTime) showScreen("dashboard-screen");
+    else openHealthScreen();
+}
+
+function skipSurvey(){
+    showScreen(surveyFirstTime ? "dashboard-screen" : "settings-screen");
+}
+
+function renderProfileConditions(){
+    const el = document.getElementById("profileConditions");
+    if(!healthProfile){
+        el.innerHTML = '<span class="report-value unknown">미확인</span>';
+        return;
+    }
+
+    const items = [...healthProfile.conditions, healthProfile.other_conditions].filter(Boolean);
+    el.innerHTML = items.length
+        ? items.map((c) => `<span class="badge">${escapeHtml(c)}</span>`).join("")
+        : '<span class="report-value">없음</span>';
 }
 
 /* ======================
@@ -672,6 +861,7 @@ function escapeHtml(str){
 
 async function openHealthScreen(){
     showScreen("health-screen");
+    renderProfileConditions();
 
     const area = document.getElementById("healthReportArea");
     area.innerHTML = '<p class="report-empty">불러오는 중...</p>';

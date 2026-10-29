@@ -43,7 +43,25 @@ health_reports
 ```
 이전 버전의 `health_logs` 테이블은 더 이상 쓰지 않는다 (기존 데이터는 DB에 남아 있음).
 
+## 기저질환 서베이
+가입 직후(또는 아직 서베이를 안 한 기존 회원이 로그인할 때) 이미 앓고 있는 질환을 고르는 화면이 나온다.
+고혈압·당뇨병 등 15개 선택지 + "없음" + 기타 질환 직접 입력. "나중에 할게요"로 건너뛰면 다음 로그인 때 다시 묻는다.
+설정 화면과 건강 기록 화면의 "앓고 있는 질환" 카드에서 수정할 수 있다.
+
+- 저장한 질환은 AI 상담 시스템 프롬프트에 붙여서 답변에 반영한다 (예: 당뇨가 있으면 주의점 안내).
+- 건강 기록 화면 맨 위에 표시되어 리포트와 함께 인쇄된다.
+
+```
+health_profiles
+  user_id           INTEGER PK FK -> users.id   -- 행이 있으면 서베이 완료
+  conditions        TEXT   -- JSON 배열 (예: ["고혈압", "당뇨병"]), "없음"이면 []
+  other_conditions  TEXT   -- 직접 입력한 기타 질환
+  updated_at        TEXT
+```
+
 ## 백엔드 API (`server/server.js`)
+- `GET /api/health-profile` : 서베이 결과 (`profile: null`이면 아직 안 함)
+- `PUT /api/health-profile` : 서베이 저장·수정
 - `POST /api/ai-chat` : 대화 응답 + 백그라운드로 리포트 추출·누적
 - `GET /api/health-reports` : 로그인한 사용자의 리포트 전체 (최근 갱신순)
 - `DELETE /api/health-reports/:id` : 리포트 삭제 (본인 것만)

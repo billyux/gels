@@ -116,6 +116,46 @@ app.get(
 );
 
 /* ======================
+   기저질환 서베이
+====================== */
+async function getHealthProfile(userId) {
+  const row = await get("SELECT conditions, other_conditions FROM health_profiles WHERE user_id = ?", [userId]);
+  if (!row) return null;
+  return { conditions: JSON.parse(row.conditions || "[]"), other_conditions: row.other_conditions || "" };
+}
+
+// profile이 null이면 아직 서베이를 안 한 것
+app.get(
+  "/api/health-profile",
+  requireAuth,
+  h(async (req, res) => {
+    res.json({ profile: await getHealthProfile(req.user.id) });
+  })
+);
+
+app.put(
+  "/api/health-profile",
+  requireAuth,
+  h(async (req, res) => {
+    const { conditions, other_conditions } = req.body || {};
+    const cleaned = (Array.isArray(conditions) ? conditions : [])
+      .map((c) => String(c).trim().slice(0, 50))
+      .filter(Boolean)
+      .slice(0, 30);
+    const other = String(other_conditions || "").trim().slice(0, 300);
+
+    await run(
+      `INSERT INTO health_profiles (user_id, conditions, other_conditions) VALUES (?, ?, ?)
+       ON CONFLICT (user_id) DO UPDATE SET conditions = excluded.conditions,
+         other_conditions = excluded.other_conditions, updated_at = datetime('now')`,
+      [req.user.id, JSON.stringify(cleaned), other]
+    );
+
+    res.json({ profile: { conditions: cleaned, other_conditions: other } });
+  })
+);
+
+/* ======================
    활동량 기록 (하드웨어 로거)
 ====================== */
 app.post(
@@ -283,9 +323,21 @@ app.post(
       });
     }
 
+    // 서베이에서 받은 기저질환을 알려줘서 답변에 반영 (예: 당뇨가 있으면 단 음식 주의)
+    let systemPrompt = CHAT_SYSTEM_PROMPT;
+    const profile = await getHealthProfile(req.user.id);
+    const knownConditions = profile
+      ? [...profile.conditions, profile.other_conditions].filter(Boolean).join(", ")
+      : "";
+    if (knownConditions) {
+      systemPrompt +=
+        `\n\n이 어르신이 이미 앓고 계신 질환: ${knownConditions}\n` +
+        "답할 때 이 질환을 고려해서, 조심해야 할 점이 있으면 쉬운 말로 함께 알려 드리세요.";
+    }
+
     try {
       const data = await callGemini({
-        systemInstruction: { parts: [{ text: CHAT_SYSTEM_PROMPT }] },
+        systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: "user", parts: [{ text }] }],
       });
 
